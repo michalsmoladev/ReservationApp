@@ -40,6 +40,16 @@ class User implements PasswordAuthenticatedUserInterface, UserInterface
         return $this->uuid;
     }
 
+    public function setUuid(Uuid $uuid): void
+    {
+        $this->uuid = $uuid;
+    }
+
+    public function setRoles(array $roles): void
+    {
+        $this->roles = $roles;
+    }
+
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
