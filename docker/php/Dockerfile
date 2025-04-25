@@ -1,4 +1,4 @@
-FROM php:8.2-fpm
+FROM php:8.4-fpm
 ARG TIMEZONE
 
 RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
