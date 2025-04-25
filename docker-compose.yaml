@@ -1,0 +1,50 @@
+services:
+  php:
+    build:
+      context: docker/php
+      args:
+        TIMEZONE: ${TIMEZONE}
+    ports:
+      - "${BIND_IP}:${PHP_PORT}:${PHP_PORT}"
+    volumes:
+      - .:/var/www:rw
+      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/php.ini
+
+  nginx:
+    build: docker/nginx
+    ports:
+      - "${BIND_IP}:${APP_PORT}:${APP_PORT}"
+      - "${BIND_IP}:${APP_PORT_SSL}:${APP_PORT_SSL}"
+    volumes_from:
+      - php
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./var/log/nginx/:/var/log/nginx
+    command: [nginx-debug, '-g', 'daemon off;']
+
+  mysql:
+    image: mysql:8.0.34
+    volumes:
+      - "./var/db:/var/lib/mysql"
+    ports:
+      - "${BIND_IP}:${MYSQL_PORT}:${MYSQL_PORT}"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+  rabbitmq:
+    image: rabbitmq:3.11-management
+    ports:
+      - "${BIND_IP}:${RABBIT_PORT}:${RABBIT_PORT}"
+      - "${BIND_IP}:${RABBIT_PORT_MANAGEMENT}:${RABBIT_PORT_MANAGEMENT}"
+
+  redis:
+    image: redis:latest
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    ports:
+      - "${BIND_IP}:${REDIS_PORT}:${REDIS_PORT}"
+    command: > 
+        --requirepass ${REDIS_PASSWORD}
