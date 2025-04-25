@@ -12,7 +12,7 @@ use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Middleware\MiddlewareInterface;
 use Symfony\Component\Messenger\Middleware\StackInterface;
 
-class LockingMiddleware extends MiddlewareServiceCreator implements MiddlewareInterface
+readonly class LockingMiddleware extends MiddlewareServiceCreator implements MiddlewareInterface
 {
     private const VALIDATOR_SUFFIX = 'Locker';
 

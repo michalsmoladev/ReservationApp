@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Application\MessageBus\Middleware;
 
-class MiddlewareServiceCreator
+readonly class MiddlewareServiceCreator
 {
     private const array ALLOWED_SUFFIXES = ['Query', 'Command'];
 

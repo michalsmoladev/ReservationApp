@@ -12,7 +12,7 @@ use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Middleware\MiddlewareInterface;
 use Symfony\Component\Messenger\Middleware\StackInterface;
 
-class ValidationMiddleware extends MiddlewareServiceCreator implements MiddlewareInterface
+readonly class ValidationMiddleware extends MiddlewareServiceCreator implements MiddlewareInterface
 {
     private const string VALIDATOR_SUFFIX = 'Validator';
 
