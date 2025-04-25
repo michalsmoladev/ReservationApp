@@ -36,4 +36,9 @@ class UserRepository implements UserInterface
     {
         $this->repository->find($uuid, LockMode::PESSIMISTIC_WRITE);
     }
+
+    public function findByUuid(Uuid $uuid): ?User
+    {
+        return $this->repository->findOneBy(['uuid' => $uuid]);
+    }
 }

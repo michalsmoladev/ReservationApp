@@ -13,6 +13,9 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\HasLifecycleCallbacks]
 class User implements PasswordAuthenticatedUserInterface, UserInterface
 {
+    private const array NON_EDITABLE_PROPERTIES = ['uuid'];
+    private const array AVAILABLE_PROPERTIES_WITH_NULL_VALUE = ['email', 'password', 'roles'];
+
     #[ORM\Id]
     #[ORM\Column(type: 'uuid', length: 36, unique: true)]
     private Uuid $uuid;
@@ -104,5 +107,20 @@ class User implements PasswordAuthenticatedUserInterface, UserInterface
     public function preUpdate(): void
     {
         $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    public function update(array $properties): self
+    {
+        foreach ($properties as $property => $propertyValue) {
+            if (
+                $propertyValue
+                && !\in_array($property, self::NON_EDITABLE_PROPERTIES, true)
+                || \in_array($property, self::AVAILABLE_PROPERTIES_WITH_NULL_VALUE, true)
+            ) {
+                $this->{$property} = $propertyValue;
+            }
+        }
+
+        return $this;
     }
 }

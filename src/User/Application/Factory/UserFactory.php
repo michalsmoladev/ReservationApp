@@ -17,7 +17,7 @@ class UserFactory
             password: $command->password,
         );
 
-        $user->setUuid(Uuid::v7());
+        $user->setUuid(Uuid::fromString($command->uuid));
         $user->setRoles(['ROLE_USER']);
 
         return $user;
