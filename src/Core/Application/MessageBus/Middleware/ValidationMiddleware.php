@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Core\Application\MessageBus\Middleware;
 
 use App\Core\Application\MessageBus\Attribute\AsMessageValidator;
