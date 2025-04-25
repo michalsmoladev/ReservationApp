@@ -7,15 +7,15 @@ framework:
                 middleware:
                     - add_bus_name_stamp_middleware: [ 'command.bus' ]
                     - reject_redelivered_message_middleware
-                    - App\Core\Infrastructure\MessageBus\Middleware\CommandStackingMiddleware
+                    - App\Core\Application\MessageBus\Middleware\CommandStackingMiddleware
                     - dispatch_after_current_bus
                     - failed_message_processing_middleware
                     - doctrine_ping_connection
                     - doctrine_close_connection
                     - doctrine_transaction
                     - send_message
-                    - App\Core\Infrastructure\MessageBus\Middleware\ValidationMiddleware
-                    - App\Core\Infrastructure\MessageBus\Middleware\LockingMiddleware
+                    - App\Core\Application\MessageBus\Middleware\ValidationMiddleware
+                    - App\Core\Application\MessageBus\Middleware\LockingMiddleware
                     - handle_message
             query.bus:
 
