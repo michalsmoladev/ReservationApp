@@ -6,6 +6,7 @@ namespace App\User\Presentation\Controller;
 
 use App\User\Application\Command\CreateUser\CreateUserCommand;
 use App\User\Application\Command\CreateUser\DTO\CreateUserDto;
+use App\User\Application\Command\RemoveUser\RemoveUserCommand;
 use App\User\Application\Command\UpdateUser\DTO\UpdateUserDto;
 use App\User\Application\Command\UpdateUser\UpdateUserCommand;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -56,6 +57,20 @@ class UserController extends AbstractController
                 password: $updateUserDto->password,
                 roles: $updateUserDto->roles,
             )
+        );
+
+        return new JsonResponse(status: Response::HTTP_OK);
+    }
+
+    #[Route(path: '/api/user/{uuid}', name: 'app_api_user_delete', methods: ['DELETE'])]
+    public function removeAction(string $uuid): JsonResponse
+    {
+        if (!Uuid::isValid($uuid)) {
+            return new JsonResponse(data: 'Invalid uuid', status: Response::HTTP_BAD_REQUEST);
+        }
+
+        $this->commandBus->dispatch(
+            new RemoveUserCommand(uuid: $uuid)
         );
 
         return new JsonResponse(status: Response::HTTP_OK);

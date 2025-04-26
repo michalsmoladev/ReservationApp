@@ -41,4 +41,10 @@ class UserRepository implements UserInterface
     {
         return $this->repository->findOneBy(['uuid' => $uuid]);
     }
+
+    public function remove(User $user): void
+    {
+        $this->entityManager->remove($user);
+        $this->entityManager->flush();
+    }
 }
