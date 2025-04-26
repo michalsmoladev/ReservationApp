@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\User\Domain\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -11,6 +13,9 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\HasLifecycleCallbacks]
 class User implements PasswordAuthenticatedUserInterface, UserInterface
 {
+    private const array NON_EDITABLE_PROPERTIES = ['uuid'];
+    private const array AVAILABLE_PROPERTIES_WITH_NULL_VALUE = ['email', 'password', 'roles'];
+
     #[ORM\Id]
     #[ORM\Column(type: 'uuid', length: 36, unique: true)]
     private Uuid $uuid;
@@ -22,7 +27,7 @@ class User implements PasswordAuthenticatedUserInterface, UserInterface
     private \DateTimeImmutable $createdAt;
 
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
-    private \DateTimeImmutable $updatedAt;
+    private ?\DateTimeImmutable $updatedAt;
 
     public function __construct(
         #[ORM\Column(type: 'string', length: 255)]
@@ -38,12 +43,22 @@ class User implements PasswordAuthenticatedUserInterface, UserInterface
         return $this->uuid;
     }
 
+    public function setUuid(Uuid $uuid): void
+    {
+        $this->uuid = $uuid;
+    }
+
+    public function setRoles(array $roles): void
+    {
+        $this->roles = $roles;
+    }
+
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function getUpdatedAt(): \DateTimeImmutable
+    public function getUpdatedAt(): ?\DateTimeImmutable
     {
         return $this->updatedAt;
     }
@@ -92,5 +107,20 @@ class User implements PasswordAuthenticatedUserInterface, UserInterface
     public function preUpdate(): void
     {
         $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    public function update(array $properties): self
+    {
+        foreach ($properties as $property => $propertyValue) {
+            if (
+                $propertyValue
+                && !\in_array($property, self::NON_EDITABLE_PROPERTIES, true)
+                || \in_array($property, self::AVAILABLE_PROPERTIES_WITH_NULL_VALUE, true)
+            ) {
+                $this->{$property} = $propertyValue;
+            }
+        }
+
+        return $this;
     }
 }
