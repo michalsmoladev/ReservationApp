@@ -3,3 +3,9 @@ controllers:
         path: ../src/Controller/
         namespace: App\Controller
     type: attribute
+
+user_controller:
+    resource:
+        path: ../src/User/Presentation/Controller
+        namespace: App\User\Presentation\Controller
+    type: attribute
