@@ -35,6 +35,9 @@ class User implements PasswordAuthenticatedUserInterface, UserInterface
 
         #[ORM\Column(type: 'string', length: 255)]
         private string $password,
+
+        #[ORM\Column(type: 'boolean', nullable: false)]
+        private bool $isActive = false,
     ) {
     }
 
@@ -95,6 +98,25 @@ class User implements PasswordAuthenticatedUserInterface, UserInterface
     public function setPassword(string $password): void
     {
         $this->password = $password;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    public function markAsActive(): self
+    {
+        $this->isActive = true;
+
+        return $this;
+    }
+
+    public function markAsInactive(): self
+    {
+        $this->isActive = false;
+
+        return $this;
     }
 
     #[ORM\PrePersist]
