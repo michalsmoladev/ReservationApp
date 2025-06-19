@@ -9,3 +9,7 @@ user_controller:
         path: ../src/User/Presentation/Controller
         namespace: App\User\Presentation\Controller
     type: attribute
+
+
+api_login_check:
+    path: /api/auth/login
