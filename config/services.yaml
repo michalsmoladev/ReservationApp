@@ -12,3 +12,6 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    App\Core\Application\Listener\KernelListener:
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, priority: 0 }

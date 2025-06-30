@@ -18,10 +18,10 @@ readonly class CreateUserValidator
 
     public function __invoke(CreateUserCommand $command): void
     {
-        $user = $this->userRepository->findByEmail(email: $command->email);
+        $user = $this->userRepository->findByEmail(email: $command->userDTO->email);
 
         if ($user) {
-            throw new ValidationFail(sprintf('User with email %s already exists', $command->email));
+            throw new ValidationFail(sprintf('User with email %s already exists', $command->userDTO->email));
         }
     }
 }

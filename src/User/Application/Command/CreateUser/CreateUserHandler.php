@@ -19,7 +19,7 @@ class CreateUserHandler
 
     public function __invoke(CreateUserCommand $command): void
     {
-        $user = $this->userFactory->create($command);
+        $user = $this->userFactory->create($command->userDTO, $command->uuid);
 
         $this->userRepository->save($user);
     }
