@@ -13,6 +13,6 @@ interface UserInterface
     public function findByUuid(Uuid $uuid): ?User;
     public function save(User $user): void;
     public function lock(Uuid $uuid): void;
-
     public function remove(User $user): void;
+    public function findByToken(string $token): ?User;
 }
