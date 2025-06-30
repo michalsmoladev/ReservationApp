@@ -14,7 +14,7 @@ use Symfony\Component\Uid\Uuid;
 class User implements PasswordAuthenticatedUserInterface, UserInterface
 {
     private const array NON_EDITABLE_PROPERTIES = ['uuid'];
-    private const array AVAILABLE_PROPERTIES_WITH_NULL_VALUE = ['email', 'password', 'roles'];
+    private const array AVAILABLE_PROPERTIES_WITH_NULL_VALUE = ['email', 'password', 'roles', 'isActive'];
 
     #[ORM\Id]
     #[ORM\Column(type: 'uuid', length: 36, unique: true)]
@@ -36,7 +36,11 @@ class User implements PasswordAuthenticatedUserInterface, UserInterface
         #[ORM\Column(type: 'string', length: 255)]
         private string $password,
 
-        #[ORM\Column(type: 'boolean', nullable: false)]
+        #[ORM\OneToOne(targetEntity: UserMetadata::class, cascade: ['persist', 'remove'])]
+        #[ORM\JoinColumn(referencedColumnName: 'id')]
+        private UserMetadata $metadata,
+
+        #[ORM\Column(type: 'boolean', nullable: false, )]
         private bool $isActive = false,
     ) {
     }
@@ -117,6 +121,16 @@ class User implements PasswordAuthenticatedUserInterface, UserInterface
         $this->isActive = false;
 
         return $this;
+    }
+
+    public function getMetadata(): UserMetadata
+    {
+        return $this->metadata;
+    }
+
+    public function setMetadata(UserMetadata $metadata): void
+    {
+        $this->metadata = $metadata;
     }
 
     #[ORM\PrePersist]

@@ -5,19 +5,29 @@ declare(strict_types=1);
 namespace App\User\Application\Factory;
 
 use App\User\Application\Command\CreateUser\CreateUserCommand;
+use App\User\Application\Command\CreateUser\DTO\CreateUserDto;
+use App\User\Application\DTO\UserDTO;
 use App\User\Domain\Entity\User;
+use App\User\Domain\Entity\UserMetadata;
 use Symfony\Component\Uid\Uuid;
 
 class UserFactory
 {
-    public function create(CreateUserCommand $command): User
+    public function create(CreateUserDto $userDTO, string $uuid): User
     {
+        $metadata = new UserMetadata(
+            activationToken:(string) Uuid::v7(),
+            activationExpiresAt: new \DateTimeImmutable('+2 hours')
+        );
+        $metadata->setId(Uuid::v7());
+
         $user = new User(
-            email: $command->email,
-            password: $command->password,
+            email: $userDTO->email,
+            password: $userDTO->password,
+            metadata: $metadata
         );
 
-        $user->setUuid(Uuid::fromString($command->uuid));
+        $user->setUuid(Uuid::fromString($uuid));
         $user->setRoles(['ROLE_USER']);
 
         return $user;

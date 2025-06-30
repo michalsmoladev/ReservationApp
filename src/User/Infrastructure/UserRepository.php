@@ -47,4 +47,17 @@ class UserRepository implements UserInterface
         $this->entityManager->remove($user);
         $this->entityManager->flush();
     }
+
+    public function findByToken(string $token): ?User
+    {
+        $qb = $this->entityManager->createQueryBuilder()
+            ->select('u')
+            ->from(User::class, 'u')
+            ->join('u.metadata', 'metadata')
+            ->where('metadata.activationToken = :token')
+            ->setParameter('token', $token)
+        ;
+
+        return $qb->getQuery()->getOneOrNullResult();
+    }
 }

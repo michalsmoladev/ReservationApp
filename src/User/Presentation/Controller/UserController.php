@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\User\Presentation\Controller;
 
+use App\User\Application\Command\ActivateUser\ActivateUserCommand;
 use App\User\Application\Command\CreateUser\CreateUserCommand;
 use App\User\Application\Command\CreateUser\DTO\CreateUserDto;
 use App\User\Application\Command\RemoveUser\RemoveUserCommand;
 use App\User\Application\Command\UpdateUser\DTO\UpdateUserDto;
 use App\User\Application\Command\UpdateUser\UpdateUserCommand;
+use App\User\Application\DTO\UserDTO;
 use App\User\Application\Query\GetUserQuery;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -27,15 +29,17 @@ class UserController extends AbstractController
     ) {
     }
 
-    #[Route(path: '/api/user', name: 'app_api_user_create', methods: ['POST'])]
+    #[Route(path: '/api/user/create', name: 'app_api_user_create', methods: ['POST'])]
     public function createUserAction(
         #[MapRequestPayload] CreateUserDto $createUserDto
     ): JsonResponse {
         $uuid = Uuid::v7();
 
         $command = new CreateUserCommand(
-            email: $createUserDto->email,
-            password: $createUserDto->password,
+            userDTO: new CreateUserDto(
+                email: $createUserDto->email,
+                password: $createUserDto->password,
+            )
         );
         $command->uuid = (string) $uuid;
 
@@ -90,5 +94,21 @@ class UserController extends AbstractController
         $result = $envelop->last(HandledStamp::class)->getResult();
 
         return new JsonResponse(data: $result, status: Response::HTTP_OK);
+    }
+
+    #[Route(path: '/api/user/activate/{activationToken}', name: 'app_api_user_activate', methods: ['GET'])]
+    public function activateAction(string $activationToken): JsonResponse
+    {
+        if (!Uuid::isValid($activationToken)) {
+            return new JsonResponse(data: 'Invalid uuid', status: Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $this->commandBus->dispatch(new ActivateUserCommand(token: $activationToken));
+        } catch (\Exception $e) {
+            return new JsonResponse(data: $e->getMessage(), status: Response::HTTP_BAD_REQUEST);
+        }
+
+        return new JsonResponse(status: Response::HTTP_OK);
     }
 }
