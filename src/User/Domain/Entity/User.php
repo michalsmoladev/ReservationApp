@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace App\User\Domain\Entity;
 
+use App\User\Domain\Entity\Customer\Customer;
+use App\User\Domain\Entity\Employee\Employee;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\DiscriminatorColumn;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity]
+#[ORM\InheritanceType('SINGLE_TABLE')]
+#[DiscriminatorColumn(name: 'type', type: 'string')]
+#[ORM\DiscriminatorMap(['customer' => Customer::class, 'employee' => Employee::class])]
 #[ORM\HasLifecycleCallbacks]
 class User implements PasswordAuthenticatedUserInterface, UserInterface
 {
