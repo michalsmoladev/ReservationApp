@@ -19,6 +19,12 @@ final readonly class CreateUserDto
         #[Assert\Length(min: 1, max: 255)]
         #[Assert\Type('string')]
         public string $password,
+
+        #[Assert\NotBlank]
+        #[Assert\Type('string')]
+        #[Assert\Length(min: 5, max: 15)]
+        #[Assert\Choice(choices: ['employee' => 'employee', 'customer' => 'customer'])]
+        public string $type,
     ) {
     }
 }
