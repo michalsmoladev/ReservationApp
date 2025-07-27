@@ -10,7 +10,6 @@ use App\User\Application\Command\CreateUser\DTO\CreateUserDto;
 use App\User\Application\Command\RemoveUser\RemoveUserCommand;
 use App\User\Application\Command\UpdateUser\DTO\UpdateUserDto;
 use App\User\Application\Command\UpdateUser\UpdateUserCommand;
-use App\User\Application\DTO\UserDTO;
 use App\User\Application\Query\GetUserQuery;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -35,12 +34,7 @@ class UserController extends AbstractController
     ): JsonResponse {
         $uuid = Uuid::v7();
 
-        $command = new CreateUserCommand(
-            userDTO: new CreateUserDto(
-                email: $createUserDto->email,
-                password: $createUserDto->password,
-            )
-        );
+        $command = new CreateUserCommand($createUserDto);
         $command->uuid = (string) $uuid;
 
         $this->commandBus->dispatch($command);

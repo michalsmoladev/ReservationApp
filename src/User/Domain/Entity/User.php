@@ -4,46 +4,46 @@ declare(strict_types=1);
 
 namespace App\User\Domain\Entity;
 
+use App\User\Domain\Entity\Customer\Customer;
+use App\User\Domain\Entity\Employee\Employee;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\DiscriminatorColumn;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity]
+#[ORM\InheritanceType('SINGLE_TABLE')]
+#[DiscriminatorColumn(name: 'type', type: 'string')]
+#[ORM\DiscriminatorMap(['customer' => Customer::class, 'employee' => Employee::class])]
 #[ORM\HasLifecycleCallbacks]
-class User implements PasswordAuthenticatedUserInterface, UserInterface
+abstract class User implements PasswordAuthenticatedUserInterface, UserInterface
 {
-    private const array NON_EDITABLE_PROPERTIES = ['uuid'];
-    private const array AVAILABLE_PROPERTIES_WITH_NULL_VALUE = ['email', 'password', 'roles', 'isActive'];
-
     #[ORM\Id]
     #[ORM\Column(type: 'uuid', length: 36, unique: true)]
-    private Uuid $uuid;
+    protected Uuid $uuid;
 
     #[ORM\Column]
-    private array $roles = [];
+    protected array $roles = [];
 
     #[ORM\Column(type: 'datetime_immutable')]
-    private \DateTimeImmutable $createdAt;
+    protected \DateTimeImmutable $createdAt;
 
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
-    private ?\DateTimeImmutable $updatedAt;
+    protected ?\DateTimeImmutable $updatedAt;
 
-    public function __construct(
-        #[ORM\Column(type: 'string', length: 255)]
-        private string $email,
+    #[ORM\Column(type: 'string', length: 255)]
+    protected string $email;
 
-        #[ORM\Column(type: 'string', length: 255)]
-        private string $password,
+    #[ORM\Column(type: 'string', length: 255)]
+    protected string $password;
 
-        #[ORM\OneToOne(targetEntity: UserMetadata::class, cascade: ['persist', 'remove'])]
-        #[ORM\JoinColumn(referencedColumnName: 'id')]
-        private UserMetadata $metadata,
+    #[ORM\OneToOne(targetEntity: UserMetadata::class, cascade: ['persist', 'remove'])]
+    #[ORM\JoinColumn(referencedColumnName: 'id')]
+    protected UserMetadata $metadata;
 
-        #[ORM\Column(type: 'boolean', nullable: false, )]
-        private bool $isActive = false,
-    ) {
-    }
+    #[ORM\Column(type: 'boolean', nullable: false, )]
+    protected bool $isActive = false;
 
     public function getUuid(): Uuid
     {
@@ -143,20 +143,5 @@ class User implements PasswordAuthenticatedUserInterface, UserInterface
     public function preUpdate(): void
     {
         $this->updatedAt = new \DateTimeImmutable();
-    }
-
-    public function update(array $properties): self
-    {
-        foreach ($properties as $property => $propertyValue) {
-            if (
-                $propertyValue
-                && !\in_array($property, self::NON_EDITABLE_PROPERTIES, true)
-                || \in_array($property, self::AVAILABLE_PROPERTIES_WITH_NULL_VALUE, true)
-            ) {
-                $this->{$property} = $propertyValue;
-            }
-        }
-
-        return $this;
     }
 }
