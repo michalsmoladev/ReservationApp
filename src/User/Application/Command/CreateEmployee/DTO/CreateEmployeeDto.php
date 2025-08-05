@@ -1,0 +1,30 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\User\Application\Command\CreateEmployee\DTO;
+
+use Symfony\Component\Validator\Constraints as Assert;
+
+final readonly class CreateEmployeeDto
+{
+    public function __construct(
+        #[Assert\Type('string')]
+        #[Assert\NotBlank]
+        #[Assert\Length(min: 1, max: 255)]
+        #[Assert\Email]
+        public string $email,
+
+        #[Assert\NotBlank]
+        #[Assert\Length(min: 1, max: 255)]
+        #[Assert\Type('string')]
+        public string $password,
+
+        #[Assert\NotBlank]
+        #[Assert\Type('string')]
+        #[Assert\Length(min: 5, max: 15)]
+        #[Assert\Choice(choices: ['employee' => 'employee', 'customer' => 'customer'])]
+        public string $type,
+    ) {
+    }
+}

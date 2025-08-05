@@ -6,7 +6,7 @@ namespace App\User\Domain\Entity\Employee;
 
 use App\User\Domain\Entity\User;
 use App\User\Domain\Entity\UserMetadata;
-use App\User\Domain\Entity\Workplace;
+use App\User\Domain\Entity\JobRole;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -17,11 +17,11 @@ class Employee extends User
     private const array NON_EDITABLE_PROPERTIES = ['uuid'];
     private const array AVAILABLE_PROPERTIES_WITH_NULL_VALUE = ['email', 'password', 'roles', 'isActive'];
 
-    #[ORM\JoinTable(name: 'employee_workplaces')]
+    #[ORM\JoinTable(name: 'employee_jobrole')]
     #[ORM\JoinColumn(name: 'employee_id', referencedColumnName: 'uuid', nullable: false)]
-    #[ORM\InverseJoinColumn(name: 'workplace_id', referencedColumnName: 'id', nullable: false)]
-    #[ORM\ManyToMany(targetEntity: Workplace::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
-    private Collection $workplaces;
+    #[ORM\InverseJoinColumn(name: 'jobrole_id', referencedColumnName: 'id', nullable: false)]
+    #[ORM\ManyToMany(targetEntity: JobRole::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $jobRoles;
 
     public function __construct(
         protected string $email,
@@ -29,24 +29,24 @@ class Employee extends User
         protected UserMetadata $metadata,
         protected bool $isActive = false,
     ) {
-        $this->workplaces = new ArrayCollection();
+        $this->jobRoles = new ArrayCollection();
     }
 
-    public function addWorkplace(Workplace $workplace): void
+    public function addJobRole(JobRole $workplace): void
     {
-        if (!$this->workplaces->contains($workplace)) {
-            $this->workplaces->add($workplace);
+        if (!$this->jobRoles->contains($workplace)) {
+            $this->jobRoles->add($workplace);
         }
     }
 
-    public function removeWorkplace(Workplace $workplace): void
+    public function removeJobRole(JobRole $workplace): void
     {
-        $this->workplaces->removeElement($workplace);
+        $this->jobRoles->removeElement($workplace);
     }
 
-    public function getWorkplaces(): Collection
+    public function getJobRoles(): Collection
     {
-        return $this->workplaces;
+        return $this->jobRoles;
     }
 
     public function update(array $properties): self

@@ -11,10 +11,10 @@ security:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         login:
-            pattern: ^/api/user/login
+            pattern: ^/api/auth
             stateless: true
             json_login:
-                check_path: /api/user/login
+                check_path: /api/auth
                 username_path: email
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
@@ -24,9 +24,10 @@ security:
             jwt: ~
 
     access_control:
-        - { path: ^/api/user/login, roles: PUBLIC_ACCESS }
-        - { path: ^/api/user/create, roles: PUBLIC_ACCESS }
-        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/auth, roles: PUBLIC_ACCESS }
+        - { path: ^/api/employee/create, roles: PUBLIC_ACCESS }
+        - { path: ^/api/employee/activate, roles: PUBLIC_ACCESS }
+        - { path: ^/api/auth, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
     role_hierarchy:

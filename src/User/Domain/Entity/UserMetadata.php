@@ -14,6 +14,8 @@ use Symfony\Component\Uid\Uuid;
 class UserMetadata
 {
     #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
+    #[ORM\CustomIdGenerator('doctrine.uuid_generator')]
     #[ORM\Column(type: 'uuid', length: 36, unique: true)]
     private Uuid $id;
 
