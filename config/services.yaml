@@ -1,4 +1,8 @@
 parameters:
+    app.exclude_path:
+        - '/api/employee/activate'
+        - '/api/employee/login'
+        - '/api/employee/create'
 
 services:
     _defaults:
@@ -15,3 +19,4 @@ services:
     App\Core\Application\Listener\KernelListener:
         tags:
             - { name: kernel.event_listener, event: kernel.request, priority: 0 }
+            - { name: kernel.event_listener, event: kernel.exception, priority: 0 }

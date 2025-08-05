@@ -1,9 +1,8 @@
-user_controller:
+employee_controller:
     resource:
         path: ../src/User/Presentation/Controller
         namespace: App\User\Presentation\Controller
     type: attribute
 
-
 api_login_check:
-    path: /api/user/login
+    path: /api/auth
