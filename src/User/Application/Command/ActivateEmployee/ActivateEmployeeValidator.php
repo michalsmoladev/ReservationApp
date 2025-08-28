@@ -34,7 +34,7 @@ class ActivateEmployeeValidator
         }
 
         if ($employee->getMetadata()->getActivationExpiresAt() < new \DateTimeImmutable()) {
-            throw new ValidationFail('Token has expired');
+            throw new ValidationFail('[ActivateEmployee] Token has expired');
         }
     }
 }

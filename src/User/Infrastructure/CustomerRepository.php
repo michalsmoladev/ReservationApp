@@ -41,4 +41,9 @@ class CustomerRepository implements CustomerRepositoryInterface
         $this->entityManager->remove($customer);
         $this->entityManager->flush();
     }
+
+    public function findByToken(Uuid $token): ?Customer
+    {
+        return $this->repository->findOneBy(['token' => $token]);
+    }
 }

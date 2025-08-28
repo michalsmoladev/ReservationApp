@@ -15,4 +15,6 @@ interface CustomerRepositoryInterface
     public function findByEmail(string $email): ?Customer;
 
     public function remove(Customer $customer): void;
+
+    public function findByToken(Uuid $token): ?Customer;
 }
