@@ -21,10 +21,15 @@ class RemoveEmployeeValidator
 
     public function __invoke(RemoveEmployeeCommand $command): void
     {
-        $employee = $this->employeeRepository->findById(Uuid::fromString($command->employeeId));
+        $employee = $this->employeeRepository->findById($command->employeeId);
 
         if (!$employee) {
-            $this->logger->info('[RemoveEmployee] Employee not found]', ['employeeId' => $command->employeeId]);
+            $this->logger->info(
+                '[RemoveEmployee] Employee not found]',
+                [
+                    'employeeId' => $command->employeeId->toString()
+                ]
+            );
 
             throw new ValidationFail('Employee not found');
         }

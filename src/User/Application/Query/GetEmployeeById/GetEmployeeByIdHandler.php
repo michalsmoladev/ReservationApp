@@ -22,7 +22,7 @@ class GetEmployeeByIdHandler
 
     public function __invoke(GetEmployeeByIdQuery $query): EmployeeDTO
     {
-        $employee = $this->employeeRepository->findById(Uuid::fromString($query->employeeId));
+        $employee = $this->employeeRepository->findById($query->employeeId);
 
         if (!$employee) {
             throw new EmployeeNotFoundException();

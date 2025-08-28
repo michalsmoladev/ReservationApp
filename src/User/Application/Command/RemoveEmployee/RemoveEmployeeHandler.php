@@ -20,7 +20,7 @@ class RemoveEmployeeHandler
 
     public function __invoke(RemoveEmployeeCommand $command): void
     {
-        $employee = $this->employeeRepository->findById(Uuid::fromString($command->employeeId));
+        $employee = $this->employeeRepository->findById($command->employeeId);
 
         $this->employeeRepository->remove($employee);
 
