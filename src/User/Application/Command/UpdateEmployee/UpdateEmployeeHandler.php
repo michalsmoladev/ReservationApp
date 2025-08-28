@@ -22,7 +22,7 @@ readonly class UpdateEmployeeHandler
     public function __invoke(UpdateEmployeeCommand $command): void
     {
         /** @var Employee $employee */
-        $employee = $this->employeeRepository->findById(Uuid::fromString($command->uuid));
+        $employee = $this->employeeRepository->findById($command->id);
 
         $employee->update(properties: (array) $command);
 

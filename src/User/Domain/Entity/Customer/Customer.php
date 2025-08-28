@@ -12,14 +12,46 @@ use Doctrine\ORM\Mapping as ORM;
 class Customer extends User
 {
     private const array NON_EDITABLE_PROPERTIES = ['uuid'];
-    private const array AVAILABLE_PROPERTIES_WITH_NULL_VALUE = ['email', 'password', 'roles', 'isActive'];
+    private const array AVAILABLE_PROPERTIES_WITH_NULL_VALUE = [
+        'email',
+        'password',
+        'roles',
+        'isActive',
+        'firstname',
+        'lastname',
+        'phone',
+        ];
 
     public function __construct(
         protected string $email,
         protected string $password,
         protected UserMetadata $metadata,
         protected bool $isActive = false,
+
+        #[ORM\Column(type: 'string', length: 255, nullable: false)]
+        private string $firstname,
+
+        #[ORM\Column(type: 'string', length: 255, nullable: false)]
+        private string $lastname,
+
+        #[ORM\Column(type: 'string', length: 255, nullable: true)]
+        private ?string $phone = null,
     ) {
+    }
+
+    public function getFirstname(): string
+    {
+        return $this->firstname;
+    }
+
+    public function getLastname(): string
+    {
+        return $this->lastname;
+    }
+
+    public function getPhone(): ?string
+    {
+        return $this->phone;
     }
 
     public function update(array $properties): self

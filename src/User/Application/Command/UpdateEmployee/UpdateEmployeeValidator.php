@@ -21,10 +21,10 @@ readonly class UpdateEmployeeValidator
 
     public function __invoke(UpdateEmployeeCommand $command): void
     {
-        $employee = $this->employeeRepository->findById(Uuid::fromString($command->uuid));
+        $employee = $this->employeeRepository->findById(Uuid::fromString($command->id));
 
         if (!$employee) {
-            $this->logger->error('[UpdateEmployee] Employee does not exists.', ['uuid' => $command->uuid]);
+            $this->logger->error('[UpdateEmployee] Employee does not exists.', ['uuid' => $command->id]);
 
             throw new ValidationFail('Employee does not exists');
         }

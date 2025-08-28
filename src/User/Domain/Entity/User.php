@@ -42,7 +42,7 @@ abstract class User implements PasswordAuthenticatedUserInterface, UserInterface
     #[ORM\JoinColumn(referencedColumnName: 'id')]
     protected UserMetadata $metadata;
 
-    #[ORM\Column(type: 'boolean', nullable: false, )]
+    #[ORM\Column(type: 'boolean', nullable: false)]
     protected bool $isActive = false;
 
     public function getUuid(): Uuid

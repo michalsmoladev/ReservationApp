@@ -11,7 +11,7 @@ use Symfony\Component\Uid\Uuid;
 
 class EmployeeFactory
 {
-    public function create(CreateEmployeeDto $employeeDto, string $uuid): Employee
+    public function create(CreateEmployeeDto $employeeDto, Uuid $id): Employee
     {
         $metadata = new UserMetadata(
             activationToken: Uuid::v7()->toString(),
@@ -24,7 +24,7 @@ class EmployeeFactory
             metadata: $metadata,
         );
 
-        $employee->setUuid(Uuid::fromString($uuid));
+        $employee->setUuid($id);
         $employee->setRoles(['ROLE_EMPLOYEE']);
 
         return $employee;

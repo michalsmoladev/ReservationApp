@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\User\Application\Command\RemoveEmployee;
+namespace App\User\Application\Command\RemoveCustomer;
 
 use Symfony\Component\Uid\Uuid;
 
-class RemoveEmployeeCommand
+class RemoveCustomerCommand
 {
     public function __construct(
-        public Uuid $employeeId,
+        public Uuid $customerId,
     ) {
     }
 }

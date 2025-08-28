@@ -35,7 +35,7 @@ class EmployeeController extends AbstractController
         $command = new CreateEmployeeCommand(
             employeeDto: $createEmployeeDto
         );
-        $command->uuid = $id->toString();
+        $command->id = $id;
 
         $this->commandBus->dispatch($command);
 
@@ -53,7 +53,7 @@ class EmployeeController extends AbstractController
 
         $this->commandBus->dispatch(
             new UpdateEmployeeCommand(
-                uuid: $id,
+                id: Uuid::fromString($id),
                 email: $updateEmployeeDTO->email,
                 password: $updateEmployeeDTO->password,
                 roles: $updateEmployeeDTO->roles,
@@ -73,7 +73,7 @@ class EmployeeController extends AbstractController
 
         $envelop = $this->queryBus->dispatch(
             new GetEmployeeByIdQuery(
-                employeeId: $id,
+                employeeId: Uuid::fromString($id),
             )
         );
 
@@ -91,7 +91,7 @@ class EmployeeController extends AbstractController
 
         $this->commandBus->dispatch(
             new RemoveEmployeeCommand(
-                employeeId: $id,
+                employeeId: Uuid::fromString($id),
             )
         );
 

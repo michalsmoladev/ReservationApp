@@ -21,7 +21,7 @@ readonly class CreateEmployeeHandler
 
     public function __invoke(CreateEmployeeCommand $command): void
     {
-        $employee = $this->employeeFactory->create($command->employeeDto, $command->uuid);
+        $employee = $this->employeeFactory->create($command->employeeDto, $command->id);
 
         $this->employeeRepository->save($employee);
 
