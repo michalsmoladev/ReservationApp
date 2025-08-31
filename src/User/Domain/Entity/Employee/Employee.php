@@ -28,6 +28,8 @@ class Employee extends User
         protected string $password,
         protected UserMetadata $metadata,
         protected bool $isActive = false,
+        protected string $firstname,
+        protected string $lastname,
     ) {
         $this->jobRoles = new ArrayCollection();
     }

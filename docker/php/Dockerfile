@@ -1,7 +1,7 @@
 FROM php:8.4-fpm
 ARG TIMEZONE
 
-RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
+RUN curl -sL https://deb.nodesource.com/setup_20.x | bash - \
   && apt-get update && apt-get install -y \
     openssl \
     libicu-dev \

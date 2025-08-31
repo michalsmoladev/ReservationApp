@@ -1,4 +1,4 @@
-FROM nginx:1.19.0
+FROM nginx:1.27-bookworm
 
 ARG TIMEZONE
 RUN ln -snf /usr/share/zoneinfo/$TIMEZONE /etc/localtime && echo $TIMEZONE > /etc/timezone

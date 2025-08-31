@@ -26,6 +26,12 @@ abstract class User implements PasswordAuthenticatedUserInterface, UserInterface
     #[ORM\Column]
     protected array $roles = [];
 
+    #[ORM\Column(type: 'string', length: 255, nullable: false)]
+    protected string $firstname;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: false)]
+    protected string $lastname;
+
     #[ORM\Column(type: 'datetime_immutable')]
     protected \DateTimeImmutable $createdAt;
 

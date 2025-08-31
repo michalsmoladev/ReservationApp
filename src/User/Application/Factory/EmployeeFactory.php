@@ -22,6 +22,9 @@ class EmployeeFactory
             email: $employeeDto->email,
             password: $employeeDto->password,
             metadata: $metadata,
+            isActive: false,
+            firstname: $employeeDto->firstname,
+            lastname: $employeeDto->lastname,
         );
 
         $employee->setUuid($id);

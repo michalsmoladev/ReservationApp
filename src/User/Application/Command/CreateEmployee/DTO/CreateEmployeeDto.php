@@ -20,11 +20,15 @@ final readonly class CreateEmployeeDto
         #[Assert\Type('string')]
         public string $password,
 
-        #[Assert\NotBlank]
         #[Assert\Type('string')]
-        #[Assert\Length(min: 5, max: 15)]
-        #[Assert\Choice(choices: ['employee' => 'employee', 'customer' => 'customer'])]
-        public string $type,
+        #[Assert\NotBlank]
+        #[Assert\Length(min: 1, max: 255)]
+        public string $firstname,
+
+        #[Assert\Type('string')]
+        #[Assert\NotBlank]
+        #[Assert\Length(min: 1, max: 255)]
+        public string $lastname,
     ) {
     }
 }

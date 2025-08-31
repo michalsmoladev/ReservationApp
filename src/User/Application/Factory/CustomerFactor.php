@@ -22,9 +22,9 @@ class CustomerFactor
             email: $customerDTO->email,
             password: $customerDTO->password,
             metadata: $metadata,
-            isActive: false,
             firstname: $customerDTO->firstname,
             lastname: $customerDTO->lastname,
+            isActive: false,
             phone: $customerDTO->phone,
         );
 

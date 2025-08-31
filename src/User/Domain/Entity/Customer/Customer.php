@@ -26,13 +26,9 @@ class Customer extends User
         protected string $email,
         protected string $password,
         protected UserMetadata $metadata,
+        protected string $firstname,
+        protected string $lastname,
         protected bool $isActive = false,
-
-        #[ORM\Column(type: 'string', length: 255, nullable: false)]
-        private string $firstname,
-
-        #[ORM\Column(type: 'string', length: 255, nullable: false)]
-        private string $lastname,
 
         #[ORM\Column(type: 'string', length: 255, nullable: true)]
         private ?string $phone = null,
