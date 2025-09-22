@@ -39,7 +39,7 @@ class EmployeeController extends AbstractController
 
         $this->commandBus->dispatch($command);
 
-        return new JsonResponse(data: ['id' => $id->toString()], status: Response::HTTP_OK);
+        return new JsonResponse(data: ['id' => $id->toString()], status: Response::HTTP_CREATED);
     }
 
     #[Route(path: '/api/employee/{id}', name: 'app_api_employee_update', methods: ['PATCH'])]

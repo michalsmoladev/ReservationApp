@@ -29,6 +29,8 @@ security:
         - { path: ^/api/employee/activate, roles: PUBLIC_ACCESS }
         - { path: ^/api/customer/create, roles: PUBLIC_ACCESS }
         - { path: ^/api/customer/activate, roles: PUBLIC_ACCESS }
+        - { path: ^/api/tenant/create, roles: PUBLIC_ACCESS }
+        - { path: ^/api/tenant/activate, roles: PUBLIC_ACCESS }
         - { path: ^/api/auth, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
