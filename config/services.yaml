@@ -3,6 +3,12 @@ parameters:
         - '/api/employee/activate'
         - '/api/employee/login'
         - '/api/employee/create'
+        - '/api/customer/activate'
+        - '/api/customer/login'
+        - '/api/customer/create'
+        - '/api/tenant/activate'
+        - '/api/tenant/login'
+        - '/api/tenant/create'
 
 services:
     _defaults:

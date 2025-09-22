@@ -6,6 +6,7 @@ namespace App\User\Domain\Entity;
 
 use App\User\Domain\Entity\Customer\Customer;
 use App\User\Domain\Entity\Employee\Employee;
+use App\User\Domain\Entity\Tenant\Tenant;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\Mapping\DiscriminatorColumn;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -15,7 +16,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Entity]
 #[ORM\InheritanceType('SINGLE_TABLE')]
 #[DiscriminatorColumn(name: 'type', type: 'string')]
-#[ORM\DiscriminatorMap(['customer' => Customer::class, 'employee' => Employee::class])]
+#[ORM\DiscriminatorMap(['customer' => Customer::class, 'employee' => Employee::class, 'tenant' => Tenant::class])]
 #[ORM\HasLifecycleCallbacks]
 abstract class User implements PasswordAuthenticatedUserInterface, UserInterface
 {
@@ -137,6 +138,16 @@ abstract class User implements PasswordAuthenticatedUserInterface, UserInterface
     public function setMetadata(UserMetadata $metadata): void
     {
         $this->metadata = $metadata;
+    }
+
+    public function getFirstname(): string
+    {
+        return $this->firstname;
+    }
+
+    public function getLastname(): string
+    {
+        return $this->lastname;
     }
 
     #[ORM\PrePersist]

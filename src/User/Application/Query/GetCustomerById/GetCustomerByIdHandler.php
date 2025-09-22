@@ -24,6 +24,10 @@ class GetCustomerByIdHandler
         /** @var Customer $customer */
         $customer = $this->customerRepository->findById($query->customerId);
 
+        if (!$customer) {
+
+        }
+
         return $this->customerService->createCustomerDtoFromCustomer($customer);
     }
 }
