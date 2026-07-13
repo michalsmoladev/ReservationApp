@@ -1,0 +1,15 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Reservation\Domain\Entity\Service;
+
+use App\Reservation\Domain\Entity\Service;
+use Symfony\Component\Uid\Uuid;
+
+interface ServiceRepositoryInterface
+{
+    public function save(Service $service): void;
+
+    public function findById(Uuid $id): ?Service;
+}
