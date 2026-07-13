@@ -4,5 +4,11 @@ employee_controller:
         namespace: App\User\Presentation\Controller
     type: attribute
 
+reservation_controller:
+    resource:
+        path: ../src/Reservation/Presentation/Controller
+        namespace: App\Reservation\Presentation\Controller
+    type: attribute
+
 api_login_check:
     path: /api/auth

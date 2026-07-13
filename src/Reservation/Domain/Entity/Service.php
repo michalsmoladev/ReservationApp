@@ -15,7 +15,7 @@ class Service
     private const array AVAILABLE_PROPERTIES_WITH_NULL_VALUE = ['name', 'description', 'duration', 'price'];
 
     #[ORM\Id]
-    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'uuid', length: 36, unique: true)]
     private Uuid $id;
 
     #[ORM\Column(type: 'datetime_immutable')]
@@ -29,7 +29,7 @@ class Service
         private string $name,
 
         #[ORM\Column(type: 'string', length: 255, nullable: true)]
-        private string $description,
+        private ?string $description,
 
         #[ORM\Column(type: 'float')]
         private float $duration,
@@ -42,6 +42,11 @@ class Service
     public function getId(): Uuid
     {
         return $this->id;
+    }
+
+    public function setId(Uuid $id): void
+    {
+        $this->id = $id;
     }
 
     public function getCreatedAt(): \DateTimeImmutable
@@ -59,7 +64,7 @@ class Service
         return $this->name;
     }
 
-    public function getDescription(): string
+    public function getDescription(): ?string
     {
         return $this->description;
     }
