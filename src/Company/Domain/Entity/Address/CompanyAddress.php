@@ -61,6 +61,11 @@ class CompanyAddress
         return $this->updatedAt;
     }
 
+    public function getCompany(): ?Company
+    {
+        return $this->company;
+    }
+
     public function setCompany(Company $company): void
     {
         $this->company = $company;

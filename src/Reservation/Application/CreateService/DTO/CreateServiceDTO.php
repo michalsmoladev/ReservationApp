@@ -12,6 +12,7 @@ class CreateServiceDTO
         public float $duration,
         public float $price,
         public string $companyId,
+        public string $companyAddressId,
     ) {
     }
 }
