@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Reservation\Domain\Entity;
 
+use App\Company\Domain\Entity\Address\CompanyAddress;
 use App\Company\Domain\Entity\Company;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
@@ -41,6 +42,10 @@ class Service
         #[ORM\ManyToOne(targetEntity: Company::class)]
         #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id', nullable: false)]
         private Company $company,
+
+        #[ORM\ManyToOne(targetEntity: CompanyAddress::class)]
+        #[ORM\JoinColumn(name: 'company_address_id', referencedColumnName: 'id', nullable: false)]
+        private CompanyAddress $companyAddress,
     ) {
     }
 
@@ -87,6 +92,11 @@ class Service
     public function getCompany(): Company
     {
         return $this->company;
+    }
+
+    public function getCompanyAddress(): CompanyAddress
+    {
+        return $this->companyAddress;
     }
 
     public function update(array $properties): self
