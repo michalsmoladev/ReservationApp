@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\User\Domain\Entity\Employee;
 
+use App\Company\Domain\Entity\Address\CompanyAddress;
+use App\Company\Domain\Entity\Company;
+use App\Reservation\Domain\Entity\Service;
 use App\User\Domain\Entity\User;
 use App\User\Domain\Entity\UserMetadata;
 use App\User\Domain\Entity\JobRole;
@@ -23,15 +26,31 @@ class Employee extends User
     #[ORM\ManyToMany(targetEntity: JobRole::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $jobRoles;
 
+    #[ORM\ManyToOne(targetEntity: Company::class)]
+    #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id', nullable: true)]
+    private ?Company $company = null;
+
+    #[ORM\ManyToOne(targetEntity: CompanyAddress::class)]
+    #[ORM\JoinColumn(name: 'company_address_id', referencedColumnName: 'id', nullable: true)]
+    private ?CompanyAddress $companyAddress = null;
+
+    #[ORM\ManyToMany(targetEntity: Service::class, mappedBy: 'employees')]
+    private Collection $services;
+
     public function __construct(
         protected string $email,
         protected string $password,
         protected UserMetadata $metadata,
-        protected bool $isActive = false,
+        Company $company,
+        CompanyAddress $companyAddress,
         protected string $firstname,
         protected string $lastname,
+        protected bool $isActive = false,
     ) {
         $this->jobRoles = new ArrayCollection();
+        $this->services = new ArrayCollection();
+        $this->company = $company;
+        $this->companyAddress = $companyAddress;
     }
 
     public function addJobRole(JobRole $workplace): void
@@ -49,6 +68,31 @@ class Employee extends User
     public function getJobRoles(): Collection
     {
         return $this->jobRoles;
+    }
+
+    public function getCompany(): ?Company
+    {
+        return $this->company;
+    }
+
+    public function getCompanyAddress(): ?CompanyAddress
+    {
+        return $this->companyAddress;
+    }
+
+    public function assignCompany(Company $company): void
+    {
+        $this->company = $company;
+    }
+
+    public function assignCompanyAddress(CompanyAddress $companyAddress): void
+    {
+        $this->companyAddress = $companyAddress;
+    }
+
+    public function getServices(): Collection
+    {
+        return $this->services;
     }
 
     public function update(array $properties): self

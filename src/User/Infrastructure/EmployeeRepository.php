@@ -31,6 +31,11 @@ class EmployeeRepository implements EmployeeRepositoryInterface
         return $this->repository->findOneBy(['uuid' => $uuid]);
     }
 
+    public function findByIds(array $uuids): array
+    {
+        return $this->repository->findBy(['uuid' => $uuids]);
+    }
+
     public function save(Employee $employee): void
     {
         $this->entityManager->persist($employee);

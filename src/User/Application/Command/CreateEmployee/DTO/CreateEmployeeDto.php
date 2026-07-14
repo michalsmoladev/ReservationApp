@@ -29,6 +29,14 @@ final readonly class CreateEmployeeDto
         #[Assert\NotBlank]
         #[Assert\Length(min: 1, max: 255)]
         public string $lastname,
+
+        #[Assert\Type('string')]
+        #[Assert\NotBlank]
+        public string $companyId,
+
+        #[Assert\Type('string')]
+        #[Assert\NotBlank]
+        public string $companyAddressId,
     ) {
     }
 }

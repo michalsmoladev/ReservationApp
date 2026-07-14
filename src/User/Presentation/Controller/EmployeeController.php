@@ -58,6 +58,8 @@ class EmployeeController extends AbstractController
                 password: $updateEmployeeDTO->password,
                 roles: $updateEmployeeDTO->roles,
                 isActive: $updateEmployeeDTO->isActive,
+                companyId: $updateEmployeeDTO->companyId,
+                companyAddressId: $updateEmployeeDTO->companyAddressId,
             )
         );
 

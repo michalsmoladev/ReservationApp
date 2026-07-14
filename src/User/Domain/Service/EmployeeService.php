@@ -26,6 +26,8 @@ class EmployeeService
                 fn (JobRole $jobRole) => $this->jobRoleService->createDtoFromEntity($jobRole),
                 $employee->getJobRoles()->toArray()
             ),
+            companyId: $employee->getCompany()?->getId()->toString(),
+            companyAddressId: $employee->getCompanyAddress()?->getId()->toString(),
             createdAt: $employee->getCreatedAt()->format(\DateTimeImmutable::ATOM),
             updatedAt: $employee->getUpdatedAt()?->format(\DateTimeImmutable::ATOM)
         );

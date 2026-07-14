@@ -13,6 +13,7 @@ class CreateServiceDTO
         public float $price,
         public string $companyId,
         public string $companyAddressId,
+        public array $employeeIds = [],
     ) {
     }
 }

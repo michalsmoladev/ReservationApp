@@ -10,6 +10,8 @@ class EmployeeDTO
         public string $email,
         public array $roles,
         public array $jobRoles,
+        public ?string $companyId,
+        public ?string $companyAddressId,
         public string $createdAt,
         public ?string $updatedAt,
     ) {
