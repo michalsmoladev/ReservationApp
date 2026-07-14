@@ -14,6 +14,8 @@ class UpdateEmployeeCommand
         public string $password,
         public array $roles,
         public bool $isActive,
+        public string $companyId,
+        public string $companyAddressId,
     ) {
     }
 }

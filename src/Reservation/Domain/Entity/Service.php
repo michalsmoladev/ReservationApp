@@ -6,6 +6,9 @@ namespace App\Reservation\Domain\Entity;
 
 use App\Company\Domain\Entity\Address\CompanyAddress;
 use App\Company\Domain\Entity\Company;
+use App\User\Domain\Entity\Employee\Employee;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
@@ -25,6 +28,12 @@ class Service
 
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $updatedAt;
+
+    #[ORM\JoinTable(name: 'service_employee')]
+    #[ORM\JoinColumn(name: 'service_id', referencedColumnName: 'id', nullable: false)]
+    #[ORM\InverseJoinColumn(name: 'employee_id', referencedColumnName: 'uuid', nullable: false)]
+    #[ORM\ManyToMany(targetEntity: Employee::class, inversedBy: 'services')]
+    private Collection $employees;
 
     public function __construct(
         #[ORM\Column(type: 'string', length: 120)]
@@ -47,6 +56,7 @@ class Service
         #[ORM\JoinColumn(name: 'company_address_id', referencedColumnName: 'id', nullable: false)]
         private CompanyAddress $companyAddress,
     ) {
+        $this->employees = new ArrayCollection();
     }
 
     public function getId(): Uuid
@@ -97,6 +107,23 @@ class Service
     public function getCompanyAddress(): CompanyAddress
     {
         return $this->companyAddress;
+    }
+
+    public function addEmployee(Employee $employee): void
+    {
+        if (!$this->employees->contains($employee)) {
+            $this->employees->add($employee);
+        }
+    }
+
+    public function removeEmployee(Employee $employee): void
+    {
+        $this->employees->removeElement($employee);
+    }
+
+    public function getEmployees(): Collection
+    {
+        return $this->employees;
     }
 
     public function update(array $properties): self

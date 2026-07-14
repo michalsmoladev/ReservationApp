@@ -22,6 +22,14 @@ class UpdateEmployeeDTO
 
         #[Assert\Type('boolean')]
         public bool $isActive,
+
+        #[Assert\Type('string')]
+        #[Assert\NotBlank]
+        public string $companyId,
+
+        #[Assert\Type('string')]
+        #[Assert\NotBlank]
+        public string $companyAddressId,
     ) {
     }
 }
