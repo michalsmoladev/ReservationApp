@@ -9,10 +9,9 @@ use Symfony\Component\Uid\Uuid;
 
 class CreateServiceCommand
 {
-    public Uuid $id;
-
     public function __construct(
-        public CreateServiceDTO $serviceDTO,
+        public CreateServiceDTO $createServiceDTO,
+        public Uuid $id,
     ) {
     }
 }

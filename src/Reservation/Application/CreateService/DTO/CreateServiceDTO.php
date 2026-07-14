@@ -8,9 +8,9 @@ class CreateServiceDTO
 {
     public function __construct(
         public string $name,
+        public ?string $description,
         public float $duration,
         public float $price,
-        public ?string $description = null,
     ) {
     }
 }

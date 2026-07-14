@@ -10,11 +10,11 @@ use Symfony\Component\Uid\Uuid;
 
 class ServiceFactory
 {
-    public function create(Uuid $id, CreateServiceDTO $serviceDTO): Service
+    public function create(CreateServiceDTO $serviceDTO, Uuid $id): Service
     {
         $service = new Service(
-            name: trim($serviceDTO->name),
-            description: $serviceDTO->description !== null ? trim($serviceDTO->description) : null,
+            name: $serviceDTO->name,
+            description: $serviceDTO->description,
             duration: $serviceDTO->duration,
             price: $serviceDTO->price,
         );

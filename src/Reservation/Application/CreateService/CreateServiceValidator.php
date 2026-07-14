@@ -12,18 +12,16 @@ class CreateServiceValidator
 {
     public function __invoke(CreateServiceCommand $command): void
     {
-        $serviceDTO = $command->serviceDTO;
-
-        if ('' === trim($serviceDTO->name)) {
-            throw new ValidationFail('[CreateService] Name cannot be empty');
+        if ('' === trim($command->createServiceDTO->name)) {
+            throw new ValidationFail('[CreateService] Service name cannot be blank');
         }
 
-        if ($serviceDTO->duration <= 0) {
-            throw new ValidationFail('[CreateService] Duration must be greater than zero');
+        if ($command->createServiceDTO->duration <= 0) {
+            throw new ValidationFail('[CreateService] Service duration must be greater than zero');
         }
 
-        if ($serviceDTO->price < 0) {
-            throw new ValidationFail('[CreateService] Price cannot be negative');
+        if ($command->createServiceDTO->price < 0) {
+            throw new ValidationFail('[CreateService] Service price cannot be negative');
         }
     }
 }

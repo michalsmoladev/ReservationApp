@@ -44,11 +44,9 @@ class Service
         return $this->id;
     }
 
-    public function setId(Uuid $id): self
+    public function setId(Uuid $id): void
     {
         $this->id = $id;
-
-        return $this;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

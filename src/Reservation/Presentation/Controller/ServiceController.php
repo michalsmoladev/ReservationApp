@@ -25,11 +25,14 @@ class ServiceController extends AbstractController
     public function createServiceAction(#[MapRequestPayload] CreateServiceDTO $createServiceDTO): JsonResponse
     {
         $id = Uuid::v7();
-        $command = new CreateServiceCommand(serviceDTO: $createServiceDTO);
-        $command->id = $id;
 
-        $this->commandBus->dispatch($command);
+        $this->commandBus->dispatch(
+            new CreateServiceCommand(
+                createServiceDTO: $createServiceDTO,
+                id: $id,
+            )
+        );
 
-        return new JsonResponse(data: ['id' => $id->toString()], status: Response::HTTP_CREATED);
+        return new JsonResponse(data: ['id' => $id->toString()], status: Response::HTTP_OK);
     }
 }
