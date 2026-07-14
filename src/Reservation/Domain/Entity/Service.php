@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Reservation\Domain\Entity;
 
+use App\Company\Domain\Entity\Company;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
@@ -36,6 +37,10 @@ class Service
 
         #[ORM\Column(type: 'float')]
         private float $price,
+
+        #[ORM\ManyToOne(targetEntity: Company::class)]
+        #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id', nullable: false)]
+        private Company $company,
     ) {
     }
 
@@ -77,6 +82,11 @@ class Service
     public function getPrice(): float
     {
         return $this->price;
+    }
+
+    public function getCompany(): Company
+    {
+        return $this->company;
     }
 
     public function update(array $properties): self

@@ -4,6 +4,12 @@ employee_controller:
         namespace: App\User\Presentation\Controller
     type: attribute
 
+company_controller:
+    resource:
+        path: ../src/Company/Presentation/Controller
+        namespace: App\Company\Presentation\Controller
+    type: attribute
+
 reservation_controller:
     resource:
         path: ../src/Reservation/Presentation/Controller
