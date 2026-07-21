@@ -6,6 +6,7 @@ namespace App\Reservation\Application\CreateReservation;
 
 use App\Core\Application\MessageBus\Attribute\AsMessageValidator;
 use App\Core\Application\MessageBus\Exception\ValidationFail;
+use App\Reservation\Domain\Entity\Reservation\ReservationRepositoryInterface;
 use App\Reservation\Domain\Entity\Service\ServiceRepositoryInterface;
 use App\User\Domain\Entity\Customer\CustomerRepositoryInterface;
 use App\User\Domain\Entity\Employee\EmployeeRepositoryInterface;
@@ -18,6 +19,7 @@ class CreateReservationValidator
         private readonly ServiceRepositoryInterface $serviceRepository,
         private readonly CustomerRepositoryInterface $customerRepository,
         private readonly EmployeeRepositoryInterface $employeeRepository,
+        private readonly ReservationRepositoryInterface $reservationRepository,
     ) {
     }
 
@@ -73,6 +75,14 @@ class CreateReservationValidator
 
         if (!$service->getEmployees()->contains($employee)) {
             throw new ValidationFail('[CreateReservation] Employee is not assigned to the selected service');
+        }
+
+        if ($this->reservationRepository->employeeHasReservationConflict(
+            employeeId: $employee->getUuid(),
+            reservationDate: $reservationDate,
+            serviceDuration: $service->getDuration(),
+        )) {
+            throw new ValidationFail('[CreateReservation] Employee already has a conflicting reservation');
         }
     }
 }
