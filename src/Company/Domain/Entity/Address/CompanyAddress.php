@@ -66,6 +66,41 @@ class CompanyAddress
         return $this->company;
     }
 
+    public function getStreet(): string
+    {
+        return $this->street;
+    }
+
+    public function getCity(): string
+    {
+        return $this->city;
+    }
+
+    public function getCountry(): string
+    {
+        return $this->country;
+    }
+
+    public function getPostalCode(): string
+    {
+        return $this->postalCode;
+    }
+
+    public function getApartmentNo(): int
+    {
+        return $this->apartmentNo;
+    }
+
+    public function getBuildingNo(): int
+    {
+        return $this->buildingNo;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
     public function setCompany(Company $company): void
     {
         $this->company = $company;
