@@ -6,6 +6,7 @@ namespace App\Reservation\Infrastructure;
 
 use App\Reservation\Domain\Entity\Reservation;
 use App\Reservation\Domain\Entity\Reservation\ReservationRepositoryInterface;
+use App\Reservation\Domain\Entity\Reservation\ReservationStatusEnum;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Symfony\Component\Uid\Uuid;
@@ -39,6 +40,10 @@ class ReservationRepository implements ReservationRepositoryInterface
 
         foreach ($employeeReservations as $employeeReservation) {
             \assert($employeeReservation instanceof Reservation);
+
+            if ($employeeReservation->getStatus() === ReservationStatusEnum::CANCELED->value) {
+                continue;
+            }
 
             $existingReservationStart = $employeeReservation->getReservationDate();
             $existingReservationEnd = $this->calculateReservationEnd(
