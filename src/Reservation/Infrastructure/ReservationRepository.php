@@ -158,6 +158,20 @@ class ReservationRepository implements ReservationRepositoryInterface
         return false;
     }
 
+    public function claimGuestReservationsByEmail(Uuid $customerId, string $email): int
+    {
+        return $this->entityManager->createQueryBuilder()
+            ->update(Reservation::class, 'r')
+            ->set('r.customerId', ':customerId')
+            ->where('r.customerId IS NULL')
+            ->andWhere('LOWER(r.guestEmail) = :email')
+            ->setParameter('customerId', $customerId)
+            ->setParameter('email', mb_strtolower(trim($email)))
+            ->getQuery()
+            ->execute()
+        ;
+    }
+
     public function save(Reservation $reservation): void
     {
         $this->entityManager->persist($reservation);

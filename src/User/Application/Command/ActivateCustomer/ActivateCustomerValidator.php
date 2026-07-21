@@ -26,12 +26,12 @@ class ActivateCustomerValidator
             $this->logger->info(
                 message: '[ActivateCustomer] Customer not found',
                 context: [
-                    'token' => $command->token->toString()
+                    'token' => $command->token
                 ]
             );
 
             throw new ValidationFail(
-                sprintf('[ActivateCustomer] Customer not found with token: %s', $command->token->toString())
+                sprintf('[ActivateCustomer] Customer not found with token: %s', $command->token)
             );
         }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\User\Presentation\Controller;
 
+use App\User\Application\Command\ActivateCustomer\ActivateCustomerCommand;
 use App\User\Application\Command\CreateCustomer\CreateCustomerCommand;
 use App\User\Application\Command\CreateCustomer\DTO\CreateCustomerDTO;
 use App\User\Application\Command\RemoveCustomer\RemoveCustomerCommand;
@@ -92,15 +93,15 @@ class CustomerController extends AbstractController
         return new JsonResponse(data: $envelope->last(HandledStamp::class)->getResult(), status: Response::HTTP_OK);
     }
 
-    #[Route(path: 'api/customer/activate/{token}', name: 'app_api_customer_active', methods: ['GET'])]
+    #[Route(path: '/api/customer/activate/{token}', name: 'app_api_customer_active', methods: ['GET'])]
     public function activeCustomerAction(string $token): JsonResponse
     {
-        if (!Uuid::isValid($token)) {
-            return new JsonResponse(data: 'Invalid ID', status: Response::HTTP_BAD_REQUEST);
+        if ('' === trim($token)) {
+            return new JsonResponse(data: 'Invalid token', status: Response::HTTP_BAD_REQUEST);
         }
 
         $this->commandBus->dispatch(
-            new ActivateEmployeeCommand(token: $token),
+            new ActivateCustomerCommand(token: $token),
         );
 
         return new JsonResponse(status: Response::HTTP_OK);

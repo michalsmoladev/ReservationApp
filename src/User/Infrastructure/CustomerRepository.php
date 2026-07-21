@@ -47,8 +47,16 @@ class CustomerRepository implements CustomerRepositoryInterface
         $this->entityManager->flush();
     }
 
-    public function findByToken(Uuid $token): ?Customer
+    public function findByToken(string $token): ?Customer
     {
-        return $this->repository->findOneBy(['token' => $token]);
+        $qb = $this->entityManager->createQueryBuilder()
+            ->select('c')
+            ->from(Customer::class, 'c')
+            ->join('c.metadata', 'metadata')
+            ->where('metadata.activationToken = :token')
+            ->setParameter('token', $token)
+        ;
+
+        return $qb->getQuery()->getOneOrNullResult();
     }
 }
