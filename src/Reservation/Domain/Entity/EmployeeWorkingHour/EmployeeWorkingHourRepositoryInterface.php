@@ -11,6 +11,8 @@ interface EmployeeWorkingHourRepositoryInterface
 {
     public function save(EmployeeWorkingHour $employeeWorkingHour): void;
 
+    public function existsForDay(Uuid $employeeId, int $dayOfWeek): bool;
+
     /**
      * @return EmployeeWorkingHour[]
      */

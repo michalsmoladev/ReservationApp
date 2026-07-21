@@ -26,6 +26,25 @@ class EmployeeAbsenceRepository implements EmployeeAbsenceRepositoryInterface
         $this->entityManager->flush();
     }
 
+    public function hasOverlap(
+        Uuid $employeeId,
+        \DateTimeImmutable $startsAt,
+        \DateTimeImmutable $endsAt,
+    ): bool {
+        return (int) $this->entityManager->createQueryBuilder()
+            ->select('COUNT(ea.id)')
+            ->from(EmployeeAbsence::class, 'ea')
+            ->where('IDENTITY(ea.employee) = :employeeId')
+            ->andWhere('ea.startsAt < :endsAt')
+            ->andWhere('ea.endsAt > :startsAt')
+            ->setParameter('employeeId', $employeeId)
+            ->setParameter('startsAt', $startsAt)
+            ->setParameter('endsAt', $endsAt)
+            ->getQuery()
+            ->getSingleScalarResult() > 0
+        ;
+    }
+
     public function findByEmployeeAndDateRange(
         Uuid $employeeId,
         \DateTimeImmutable $from,
