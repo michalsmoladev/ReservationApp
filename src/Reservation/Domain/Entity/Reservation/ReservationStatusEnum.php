@@ -7,4 +7,6 @@ namespace App\Reservation\Domain\Entity\Reservation;
 enum ReservationStatusEnum: string
 {
     case WAITING_FOR_APPROVAL = 'waiting_for_approval';
+    case CONFIRMED = 'confirmed';
+    case CANCELED = 'canceled';
 }

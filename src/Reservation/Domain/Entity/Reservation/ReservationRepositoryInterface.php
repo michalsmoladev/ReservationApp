@@ -9,6 +9,8 @@ use Symfony\Component\Uid\Uuid;
 
 interface ReservationRepositoryInterface
 {
+    public function findById(Uuid $id): ?Reservation;
+
     public function employeeHasReservationConflict(
         Uuid $employeeId,
         \DateTimeImmutable $reservationDate,

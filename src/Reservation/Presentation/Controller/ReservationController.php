@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Reservation\Presentation\Controller;
 
+use App\Reservation\Application\AcceptReservation\AcceptReservationCommand;
+use App\Reservation\Application\CancelReservation\CancelReservationCommand;
 use App\Reservation\Application\CreateReservation\CreateReservationCommand;
 use App\Reservation\Application\CreateReservation\DTO\CreateReservationDTO;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -34,5 +36,29 @@ class ReservationController extends AbstractController
         );
 
         return new JsonResponse(data: ['id' => $id->toString()], status: Response::HTTP_OK);
+    }
+
+    #[Route(path: '/api/reservation/{id}/accept', name: 'app_api_reservation_accept', methods: ['POST'])]
+    public function acceptReservationAction(string $id): JsonResponse
+    {
+        $this->commandBus->dispatch(
+            new AcceptReservationCommand(
+                reservationId: Uuid::fromString($id),
+            )
+        );
+
+        return new JsonResponse(status: Response::HTTP_OK);
+    }
+
+    #[Route(path: '/api/reservation/{id}/cancel', name: 'app_api_reservation_cancel', methods: ['POST'])]
+    public function cancelReservationAction(string $id): JsonResponse
+    {
+        $this->commandBus->dispatch(
+            new CancelReservationCommand(
+                reservationId: Uuid::fromString($id),
+            )
+        );
+
+        return new JsonResponse(status: Response::HTTP_OK);
     }
 }
