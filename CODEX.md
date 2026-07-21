@@ -177,8 +177,11 @@ The command bus is customized in `config/packages/messenger.yaml`.
   - `POST /api/company-opening-hour`
   - `POST /api/employee-working-hour`
   - `POST /api/employee-absence`
-- Current company endpoint surface is still limited:
+- Current company endpoints:
   - `POST /api/company`
+  - `GET /api/company/{id}`
+  - `GET /api/companies`
+  - `PATCH /api/company/{id}`
 
 ## Current Sharp Edges
 
@@ -186,7 +189,7 @@ These are the sharp edges that still appear to be real as of July 21, 2026:
 
 - `CreateGuestReservation` currently returns `guestCancellationToken` directly from API because there is no finished mailer/delivery flow for cancellation links.
 - The regression suite lives in `tests/run.php`, not in a standard PHPUnit bootstrap yet.
-- Company management API is still incomplete compared with service/reservation flows. Right now `CompanyController` exposes only `POST /api/company`; there is still no practical `GET /api/company/{id}`, `GET /api/companies`, or `PATCH /api/company/{id}` flow.
+- Company write/read coverage is still not complete beyond the new core endpoints. Right now there is no company delete flow, no separate company address management API, and company update currently covers only top-level company fields, not address editing.
 
 ## Implementation Guidance
 
