@@ -12,6 +12,21 @@ interface ReservationRepositoryInterface
     public function findById(Uuid $id): ?Reservation;
 
     /**
+     * @param Uuid[]|null $companyIds
+     * @return Reservation[]
+     */
+    public function findByFilters(
+        ?Uuid $companyId,
+        ?Uuid $companyAddressId,
+        ?Uuid $employeeId,
+        ?Uuid $customerId,
+        ?\DateTimeImmutable $from,
+        ?\DateTimeImmutable $to,
+        ?string $status,
+        ?array $companyIds = null,
+    ): array;
+
+    /**
      * @param Uuid[] $employeeIds
      * @return Reservation[]
      */

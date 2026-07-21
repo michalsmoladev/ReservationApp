@@ -31,6 +31,11 @@ class CustomerRepository implements CustomerRepositoryInterface
         return $this->repository->find($id);
     }
 
+    public function findByIds(array $ids): array
+    {
+        return $this->repository->findBy(['uuid' => $ids]);
+    }
+
     public function findByEmail(string $email): ?Customer
     {
         return $this->repository->findOneBy(['email' => $email]);
