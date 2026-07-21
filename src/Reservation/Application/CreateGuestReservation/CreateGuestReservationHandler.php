@@ -34,6 +34,10 @@ class CreateGuestReservationHandler
             throw new \RuntimeException('[CreateGuestReservation] Service not found during reservation creation');
         }
 
+        if (!$service->isActive()) {
+            throw new \RuntimeException('[CreateGuestReservation] Service is not active during reservation creation');
+        }
+
         $reservationDate = new \DateTimeImmutable($command->createGuestReservationDTO->reservationDate);
         $employee = $command->createGuestReservationDTO->employeeId
             ? $this->employeeRepository->findById(Uuid::fromString($command->createGuestReservationDTO->employeeId))

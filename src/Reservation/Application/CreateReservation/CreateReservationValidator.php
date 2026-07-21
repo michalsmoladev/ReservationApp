@@ -57,6 +57,10 @@ class CreateReservationValidator
             throw new ValidationFail('[CreateReservation] Service not found');
         }
 
+        if (!$service->isActive()) {
+            throw new ValidationFail('[CreateReservation] Service is not active');
+        }
+
         $customer = $this->customerRepository->findById(Uuid::fromString($command->createReservationDTO->customerId));
 
         if (!$customer) {
