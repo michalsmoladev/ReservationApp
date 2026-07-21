@@ -6,6 +6,12 @@ namespace App\Company\Presentation\Controller;
 
 use App\Company\Application\Command\CreateCompany\CreateCompanyCommand;
 use App\Company\Application\Command\CreateCompany\DTO\CreateCompanyDTO;
+use App\Company\Application\Command\CreateCompanyAddress\CreateCompanyAddressCommand;
+use App\Company\Application\Command\CreateCompanyAddress\DTO\CreateCompanyAddressDTO;
+use App\Company\Application\Command\DeleteCompanyAddress\DeleteCompanyAddressCommand;
+use App\Company\Application\Command\UpdateCompanyAddress\DTO\UpdateCompanyAddressDTO;
+use App\Company\Application\Command\UpdateCompanyAddress\UpdateCompanyAddressCommand;
+use App\Company\Application\Query\GetCompanyAddresses\GetCompanyAddressesQuery;
 use App\Company\Application\Command\UpdateCompany\DTO\UpdateCompanyDTO;
 use App\Company\Application\Command\UpdateCompany\UpdateCompanyCommand;
 use App\Company\Application\Query\GetCompanies\GetCompaniesQuery;
@@ -90,5 +96,75 @@ class CompanyController extends AbstractController
         );
 
         return new JsonResponse(status: Response::HTTP_OK);
+    }
+
+    #[Route(path: '/api/company/{id}/addresses', name: 'app_api_company_address_list', methods: ['GET'])]
+    public function listCompanyAddressesAction(string $id): JsonResponse
+    {
+        if (!Uuid::isValid($id)) {
+            return new JsonResponse(data: 'Invalid uuid', status: Response::HTTP_BAD_REQUEST);
+        }
+
+        $envelope = $this->queryBus->dispatch(
+            new GetCompanyAddressesQuery(companyId: Uuid::fromString($id))
+        );
+
+        return new JsonResponse(
+            data: $envelope->last(HandledStamp::class)->getResult(),
+            status: Response::HTTP_OK,
+        );
+    }
+
+    #[Route(path: '/api/company/{id}/address', name: 'app_api_company_address_create', methods: ['POST'])]
+    public function createCompanyAddressAction(string $id, #[MapRequestPayload] CreateCompanyAddressDTO $createCompanyAddressDTO): JsonResponse
+    {
+        if (!Uuid::isValid($id)) {
+            return new JsonResponse(data: 'Invalid uuid', status: Response::HTTP_BAD_REQUEST);
+        }
+
+        $addressId = Uuid::v7();
+
+        $this->commandBus->dispatch(
+            new CreateCompanyAddressCommand(
+                companyId: Uuid::fromString($id),
+                addressId: $addressId,
+                createCompanyAddressDTO: $createCompanyAddressDTO,
+            )
+        );
+
+        return new JsonResponse(data: ['id' => $addressId->toString()], status: Response::HTTP_CREATED);
+    }
+
+    #[Route(path: '/api/company/address/{id}', name: 'app_api_company_address_update', methods: ['PATCH'])]
+    public function updateCompanyAddressAction(string $id, #[MapRequestPayload] UpdateCompanyAddressDTO $updateCompanyAddressDTO): JsonResponse
+    {
+        if (!Uuid::isValid($id)) {
+            return new JsonResponse(data: 'Invalid uuid', status: Response::HTTP_BAD_REQUEST);
+        }
+
+        $this->commandBus->dispatch(
+            new UpdateCompanyAddressCommand(
+                companyAddressId: Uuid::fromString($id),
+                updateCompanyAddressDTO: $updateCompanyAddressDTO,
+            )
+        );
+
+        return new JsonResponse(status: Response::HTTP_OK);
+    }
+
+    #[Route(path: '/api/company/address/{id}', name: 'app_api_company_address_delete', methods: ['DELETE'])]
+    public function deleteCompanyAddressAction(string $id): JsonResponse
+    {
+        if (!Uuid::isValid($id)) {
+            return new JsonResponse(data: 'Invalid uuid', status: Response::HTTP_BAD_REQUEST);
+        }
+
+        $this->commandBus->dispatch(
+            new DeleteCompanyAddressCommand(
+                companyAddressId: Uuid::fromString($id),
+            )
+        );
+
+        return new JsonResponse(status: Response::HTTP_NO_CONTENT);
     }
 }

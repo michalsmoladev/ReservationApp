@@ -27,6 +27,9 @@ abstract class NamedException extends \Exception
     public const string COMPANY_NOT_FOUND_MESSAGE = 'company.companyNotFound';
     public const int COMPANY_NOT_FOUND_CODE = 2006;
 
+    public const string COMPANY_ADDRESS_NOT_FOUND_MESSAGE = 'company.companyAddressNotFound';
+    public const int COMPANY_ADDRESS_NOT_FOUND_CODE = 2007;
+
     public function getErrorMessage(): string
     {
         return self::API_ERROR_MESSAGE;

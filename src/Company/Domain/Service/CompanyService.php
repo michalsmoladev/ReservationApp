@@ -14,18 +14,7 @@ class CompanyService
     public function createDtoFromEntity(Company $company): CompanyDetailsDTO
     {
         $addresses = array_map(
-            fn (CompanyAddress $address): CompanyAddressDTO => new CompanyAddressDTO(
-                id: $address->getId()->toString(),
-                street: $address->getStreet(),
-                city: $address->getCity(),
-                country: $address->getCountry(),
-                postalCode: $address->getPostalCode(),
-                apartmentNo: $address->getApartmentNo(),
-                buildingNo: $address->getBuildingNo(),
-                name: $address->getName(),
-                createdAt: $address->getCreatedAt()->format(\DateTimeImmutable::ATOM),
-                updatedAt: $address->getUpdatedAt()?->format(\DateTimeImmutable::ATOM),
-            ),
+            fn (CompanyAddress $address): CompanyAddressDTO => $this->createAddressDtoFromEntity($address),
             $company->getAddresses()->toArray(),
         );
 
@@ -38,6 +27,22 @@ class CompanyService
             addresses: $addresses,
             createdAt: $company->getCreatedAt()->format(\DateTimeImmutable::ATOM),
             updatedAt: $company->getUpdatedAt()?->format(\DateTimeImmutable::ATOM),
+        );
+    }
+
+    public function createAddressDtoFromEntity(CompanyAddress $address): CompanyAddressDTO
+    {
+        return new CompanyAddressDTO(
+            id: $address->getId()->toString(),
+            street: $address->getStreet(),
+            city: $address->getCity(),
+            country: $address->getCountry(),
+            postalCode: $address->getPostalCode(),
+            apartmentNo: $address->getApartmentNo(),
+            buildingNo: $address->getBuildingNo(),
+            name: $address->getName(),
+            createdAt: $address->getCreatedAt()->format(\DateTimeImmutable::ATOM),
+            updatedAt: $address->getUpdatedAt()?->format(\DateTimeImmutable::ATOM),
         );
     }
 }

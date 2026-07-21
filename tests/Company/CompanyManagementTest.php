@@ -4,11 +4,27 @@ declare(strict_types=1);
 
 namespace App\Tests\Company;
 
+use App\Company\Application\Command\CreateCompanyAddress\CreateCompanyAddressCommand;
+use App\Company\Application\Command\CreateCompanyAddress\CreateCompanyAddressHandler;
+use App\Company\Application\Command\CreateCompanyAddress\CreateCompanyAddressValidator;
+use App\Company\Application\Command\CreateCompanyAddress\DTO\CreateCompanyAddressDTO;
+use App\Company\Application\Command\DeleteCompanyAddress\DeleteCompanyAddressCommand;
+use App\Company\Application\Command\DeleteCompanyAddress\DeleteCompanyAddressHandler;
+use App\Company\Application\Command\DeleteCompanyAddress\DeleteCompanyAddressValidator;
+use App\Company\Application\Command\UpdateCompanyAddress\DTO\UpdateCompanyAddressDTO;
+use App\Company\Application\Command\UpdateCompanyAddress\UpdateCompanyAddressCommand;
+use App\Company\Application\Command\UpdateCompanyAddress\UpdateCompanyAddressHandler;
+use App\Company\Application\Command\UpdateCompanyAddress\UpdateCompanyAddressValidator;
 use App\Company\Application\Command\UpdateCompany\DTO\UpdateCompanyDTO;
 use App\Company\Application\Command\UpdateCompany\UpdateCompanyCommand;
 use App\Company\Application\Command\UpdateCompany\UpdateCompanyHandler;
 use App\Company\Application\Command\UpdateCompany\UpdateCompanyValidator;
 use App\Company\Application\Exception\CompanyNotFoundException;
+use App\Company\Application\Query\GetCompanyAddresses\GetCompanyAddressesHandler;
+use App\Company\Application\Query\GetCompanyAddresses\GetCompanyAddressesQuery;
+use App\Company\Application\Query\GetCompanyAddresses\GetCompanyAddressesValidator;
+use App\Company\Application\Factory\CompanyAddressFactory;
+use App\Company\Domain\Entity\Address\CompanyAddressRepositoryInterface;
 use App\Company\Application\Query\GetCompanies\GetCompaniesHandler;
 use App\Company\Application\Query\GetCompanies\GetCompaniesQuery;
 use App\Company\Application\Query\GetCompanyById\GetCompanyByIdHandler;
@@ -38,6 +54,13 @@ final class CompanyManagementTest
         $this->testTenantCannotViewForeignCompany();
         $this->testTenantCanUpdateOwnedCompany();
         $this->testTenantCannotUpdateForeignCompany();
+        $this->testTenantCanListCompanyAddresses();
+        $this->testTenantCanCreateCompanyAddress();
+        $this->testTenantCannotCreateCompanyAddressForForeignCompany();
+        $this->testTenantCanUpdateCompanyAddress();
+        $this->testTenantCannotUpdateForeignCompanyAddress();
+        $this->testTenantCanDeleteUnusedCompanyAddress();
+        $this->testTenantCannotDeleteUsedCompanyAddress();
     }
 
     private function testTenantCanListOnlyOwnedCompanies(): void
@@ -155,6 +178,201 @@ final class CompanyManagementTest
         );
     }
 
+    private function testTenantCanListCompanyAddresses(): void
+    {
+        $company = $this->createCompany('Owned Company');
+        $tenant = $this->createTenant([$company]);
+        $companyRepository = new InMemoryCompanyRepository([$company]);
+        $addressRepository = new InMemoryCompanyAddressRepository($company->getAddresses()->toArray());
+
+        (new GetCompanyAddressesValidator(
+            security: $this->securityForUser($tenant),
+        ))(new GetCompanyAddressesQuery($company->getId()));
+
+        $result = (new GetCompanyAddressesHandler(
+            companyRepository: $companyRepository,
+            companyAddressRepository: $addressRepository,
+            companyService: new CompanyService(),
+            security: $this->securityForUser($tenant),
+        ))(new GetCompanyAddressesQuery($company->getId()));
+
+        self::assertSame(1, \count($result->addresses));
+        self::assertSame('HQ', $result->addresses[0]->name);
+    }
+
+    private function testTenantCanCreateCompanyAddress(): void
+    {
+        $company = $this->createCompany('Owned Company');
+        $tenant = $this->createTenant([$company]);
+        $companyRepository = new InMemoryCompanyRepository([$company]);
+        $addressRepository = new InMemoryCompanyAddressRepository($company->getAddresses()->toArray());
+        $command = new CreateCompanyAddressCommand(
+            companyId: $company->getId(),
+            addressId: Uuid::v7(),
+            createCompanyAddressDTO: new CreateCompanyAddressDTO(
+                street: 'New Street',
+                city: 'Warsaw',
+                apartmentNo: 5,
+                buildingNo: 10,
+                postalCode: '00-002',
+                country: 'PL',
+                name: 'Branch',
+            ),
+        );
+
+        (new CreateCompanyAddressValidator(
+            companyRepository: $companyRepository,
+            security: $this->securityForUser($tenant),
+        ))($command);
+
+        (new CreateCompanyAddressHandler(
+            companyRepository: $companyRepository,
+            companyAddressRepository: $addressRepository,
+            companyAddressFactory: new CompanyAddressFactory(),
+            logger: new NullLogger(),
+        ))($command);
+
+        self::assertSame(2, \count($addressRepository->findByCompanyId($company->getId())));
+    }
+
+    private function testTenantCannotCreateCompanyAddressForForeignCompany(): void
+    {
+        $ownedCompany = $this->createCompany('Owned Company');
+        $foreignCompany = $this->createCompany('Foreign Company');
+        $tenant = $this->createTenant([$ownedCompany]);
+        $companyRepository = new InMemoryCompanyRepository([$ownedCompany, $foreignCompany]);
+
+        self::assertThrows(
+            static fn () => (new CreateCompanyAddressValidator(
+                companyRepository: $companyRepository,
+                security: self::securityForStaticUser($tenant),
+            ))(new CreateCompanyAddressCommand(
+                companyId: $foreignCompany->getId(),
+                addressId: Uuid::v7(),
+                createCompanyAddressDTO: new CreateCompanyAddressDTO(
+                    street: 'New Street',
+                    city: 'Warsaw',
+                    apartmentNo: 5,
+                    buildingNo: 10,
+                    postalCode: '00-002',
+                    country: 'PL',
+                    name: 'Branch',
+                ),
+            )),
+            ValidationFail::class,
+            'Tenant should not create address for foreign company',
+        );
+    }
+
+    private function testTenantCanUpdateCompanyAddress(): void
+    {
+        $company = $this->createCompany('Owned Company');
+        $tenant = $this->createTenant([$company]);
+        /** @var CompanyAddress $address */
+        $address = $company->getAddresses()->first();
+        $addressRepository = new InMemoryCompanyAddressRepository([$address]);
+        $command = new UpdateCompanyAddressCommand(
+            companyAddressId: $address->getId(),
+            updateCompanyAddressDTO: new UpdateCompanyAddressDTO(
+                street: ' Updated Street ',
+                city: ' Updated City ',
+                apartmentNo: 3,
+                buildingNo: 11,
+                postalCode: '00-003',
+                country: ' DE ',
+                name: ' Branch ',
+            ),
+        );
+
+        (new UpdateCompanyAddressValidator(
+            companyAddressRepository: $addressRepository,
+            security: $this->securityForUser($tenant),
+        ))($command);
+
+        (new UpdateCompanyAddressHandler(
+            companyAddressRepository: $addressRepository,
+            logger: new NullLogger(),
+        ))($command);
+
+        $updated = $addressRepository->findById($address->getId());
+        self::assertSame('Updated Street', $updated?->getStreet());
+        self::assertSame('Updated City', $updated?->getCity());
+        self::assertSame('DE', $updated?->getCountry());
+        self::assertSame('Branch', $updated?->getName());
+    }
+
+    private function testTenantCannotUpdateForeignCompanyAddress(): void
+    {
+        $ownedCompany = $this->createCompany('Owned Company');
+        $foreignCompany = $this->createCompany('Foreign Company');
+        $tenant = $this->createTenant([$ownedCompany]);
+        /** @var CompanyAddress $foreignAddress */
+        $foreignAddress = $foreignCompany->getAddresses()->first();
+        $addressRepository = new InMemoryCompanyAddressRepository([$foreignAddress]);
+
+        self::assertThrows(
+            static fn () => (new UpdateCompanyAddressValidator(
+                companyAddressRepository: $addressRepository,
+                security: self::securityForStaticUser($tenant),
+            ))(new UpdateCompanyAddressCommand(
+                companyAddressId: $foreignAddress->getId(),
+                updateCompanyAddressDTO: new UpdateCompanyAddressDTO(
+                    street: 'Street',
+                    city: 'City',
+                    apartmentNo: 1,
+                    buildingNo: 2,
+                    postalCode: '00-001',
+                    country: 'PL',
+                    name: 'HQ',
+                ),
+            )),
+            ValidationFail::class,
+            'Tenant should not update foreign company address',
+        );
+    }
+
+    private function testTenantCanDeleteUnusedCompanyAddress(): void
+    {
+        $company = $this->createCompany('Owned Company');
+        $tenant = $this->createTenant([$company]);
+        /** @var CompanyAddress $address */
+        $address = $company->getAddresses()->first();
+        $addressRepository = new InMemoryCompanyAddressRepository([$address]);
+        $addressRepository->isUsed = false;
+        $command = new DeleteCompanyAddressCommand($address->getId());
+
+        (new DeleteCompanyAddressValidator(
+            companyAddressRepository: $addressRepository,
+            security: $this->securityForUser($tenant),
+        ))($command);
+
+        (new DeleteCompanyAddressHandler(
+            companyAddressRepository: $addressRepository,
+            logger: new NullLogger(),
+        ))($command);
+
+        self::assertSame(null, $addressRepository->findById($address->getId()));
+    }
+
+    private function testTenantCannotDeleteUsedCompanyAddress(): void
+    {
+        $company = $this->createCompany('Owned Company');
+        $tenant = $this->createTenant([$company]);
+        /** @var CompanyAddress $address */
+        $address = $company->getAddresses()->first();
+        $addressRepository = new InMemoryCompanyAddressRepository([$address]);
+        $addressRepository->isUsed = true;
+
+        self::assertThrows(
+            static fn () => (new DeleteCompanyAddressValidator(
+                companyAddressRepository: $addressRepository,
+                security: self::securityForStaticUser($tenant),
+            ))(new DeleteCompanyAddressCommand($address->getId())),
+            ValidationFail::class,
+            'Tenant should not delete used company address',
+        );
+    }
+
     private function createCompany(string $displayName): Company
     {
         $company = new Company(
@@ -211,6 +429,11 @@ final class CompanyManagementTest
     }
 
     private function securityForUser(?UserInterface $user): Security
+    {
+        return self::securityForStaticUser($user);
+    }
+
+    private static function securityForStaticUser(?UserInterface $user): Security
     {
         $token = new class($user) implements TokenInterface {
             private array $attributes = [];
@@ -395,5 +618,55 @@ final class InMemoryCompanyRepository implements CompanyRepositoryInterface
         }
 
         return null;
+    }
+}
+
+final class InMemoryCompanyAddressRepository implements CompanyAddressRepositoryInterface
+{
+    public bool $isUsed = false;
+    private array $addresses = [];
+
+    /**
+     * @param CompanyAddress[] $addresses
+     */
+    public function __construct(array $addresses)
+    {
+        foreach ($addresses as $address) {
+            $this->addresses[$address->getId()->toString()] = $address;
+        }
+    }
+
+    public function findById(Uuid $id): ?CompanyAddress
+    {
+        foreach ($this->addresses as $address) {
+            if ($address->getId()->equals($id)) {
+                return $address;
+            }
+        }
+
+        return null;
+    }
+
+    public function findByCompanyId(Uuid $companyId): array
+    {
+        return array_values(array_filter(
+            $this->addresses,
+            static fn (CompanyAddress $address): bool => null !== $address->getCompany() && $address->getCompany()->getId()->equals($companyId),
+        ));
+    }
+
+    public function save(CompanyAddress $companyAddress): void
+    {
+        $this->addresses[$companyAddress->getId()->toString()] = $companyAddress;
+    }
+
+    public function remove(CompanyAddress $companyAddress): void
+    {
+        unset($this->addresses[$companyAddress->getId()->toString()]);
+    }
+
+    public function isUsed(Uuid $companyAddressId): bool
+    {
+        return $this->isUsed;
     }
 }
