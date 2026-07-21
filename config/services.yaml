@@ -6,6 +6,8 @@ parameters:
         - '/api/customer/activate'
         - '/api/customer/login'
         - '/api/customer/create'
+        - '/api/reservation/guest'
+        - '/api/reservation/guest/cancel'
         - '/api/tenant/activate'
         - '/api/tenant/login'
         - '/api/tenant/create'

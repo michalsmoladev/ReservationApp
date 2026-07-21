@@ -58,6 +58,9 @@ class Reservation
 
         #[ORM\Column(type: 'string', length: 255, nullable: true)]
         private ?string $guestPhone = null,
+
+        #[ORM\Column(type: 'string', length: 255, nullable: true)]
+        private ?string $guestCancellationToken = null,
     ) {
         $this->id = $id;
     }
@@ -96,6 +99,7 @@ class Reservation
         string $guestLastname,
         string $guestEmail,
         string $guestPhone,
+        string $guestCancellationToken,
         ?string $note = null,
     ): self {
         return new self(
@@ -112,6 +116,7 @@ class Reservation
             guestLastname: $guestLastname,
             guestEmail: $guestEmail,
             guestPhone: $guestPhone,
+            guestCancellationToken: $guestCancellationToken,
         );
     }
 
@@ -158,6 +163,11 @@ class Reservation
     public function getGuestPhone(): ?string
     {
         return $this->guestPhone;
+    }
+
+    public function getGuestCancellationToken(): ?string
+    {
+        return $this->guestCancellationToken;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

@@ -63,6 +63,7 @@ class CreateGuestReservationHandler
             id: $command->id,
             service: $service,
             employee: $employee,
+            guestCancellationToken: $command->guestCancellationToken,
         );
 
         $this->reservationRepository->save($reservation);
