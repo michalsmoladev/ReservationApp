@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\User\Infrastructure;
 
 use App\User\Domain\Entity\Tenant\Tenant;
@@ -47,6 +49,14 @@ class TenantRepository implements TenantRepositoryInterface
 
     public function findByToken(string $token): ?Tenant
     {
-        return $this->repository->findOneBy(['token' => $token]);
+        $qb = $this->entityManager->createQueryBuilder()
+            ->select('u')
+            ->from(Tenant::class, 'u')
+            ->join('u.metadata', 'metadata')
+            ->where('metadata.activationToken = :token')
+            ->setParameter('token', $token)
+        ;
+
+        return $qb->getQuery()->getOneOrNullResult();
     }
 }

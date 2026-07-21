@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\User\Application\Command\ActivateTenant;
 
 use App\User\Domain\Entity\Tenant\TenantRepositoryInterface;
@@ -18,6 +20,10 @@ class ActivateTenantHandler
     public function __invoke(ActivateTenantCommand $command): void
     {
         $tenant = $this->tenantRepository->findByToken($command->token);
+
+        if (!$tenant) {
+            throw new \RuntimeException('[ActivateTenant] Tenant not found during activation');
+        }
 
         $tenant->markAsActive();
 

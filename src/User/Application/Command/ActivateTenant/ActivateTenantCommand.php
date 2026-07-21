@@ -1,13 +1,13 @@
 <?php
 
-namespace App\User\Application\Command\ActivateTenant;
+declare(strict_types=1);
 
-use Symfony\Component\Uid\Uuid;
+namespace App\User\Application\Command\ActivateTenant;
 
 class ActivateTenantCommand
 {
     public function __construct(
-        public readonly Uuid $token,
+        public readonly string $token,
     ) {
     }
 }

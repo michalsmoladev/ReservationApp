@@ -100,7 +100,7 @@ class EmployeeController extends AbstractController
         return new JsonResponse(status: Response::HTTP_OK);
     }
 
-    #[Route(path: 'api/employee/activate/{token}', name: 'app_api_employee_active', methods: ['GET'])]
+    #[Route(path: '/api/employee/activate/{token}', name: 'app_api_employee_active', methods: ['GET'])]
     public function activeEmployeeAction(string $token): JsonResponse
     {
         if (!Uuid::isValid($token)) {
