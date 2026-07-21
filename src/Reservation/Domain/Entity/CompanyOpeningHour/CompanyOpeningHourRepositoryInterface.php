@@ -11,6 +11,12 @@ interface CompanyOpeningHourRepositoryInterface
 {
     public function save(CompanyOpeningHour $companyOpeningHour): void;
 
+    public function existsForDay(
+        Uuid $companyId,
+        int $dayOfWeek,
+        ?Uuid $companyAddressId = null,
+    ): bool;
+
     /**
      * @return CompanyOpeningHour[]
      */

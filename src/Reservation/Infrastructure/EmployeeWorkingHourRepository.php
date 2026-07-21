@@ -26,6 +26,20 @@ class EmployeeWorkingHourRepository implements EmployeeWorkingHourRepositoryInte
         $this->entityManager->flush();
     }
 
+    public function existsForDay(Uuid $employeeId, int $dayOfWeek): bool
+    {
+        return (int) $this->entityManager->createQueryBuilder()
+            ->select('COUNT(ewh.id)')
+            ->from(EmployeeWorkingHour::class, 'ewh')
+            ->where('IDENTITY(ewh.employee) = :employeeId')
+            ->andWhere('ewh.dayOfWeek = :dayOfWeek')
+            ->setParameter('employeeId', $employeeId)
+            ->setParameter('dayOfWeek', $dayOfWeek)
+            ->getQuery()
+            ->getSingleScalarResult() > 0
+        ;
+    }
+
     public function findByEmployeeAndDateRange(
         Uuid $employeeId,
         \DateTimeImmutable $from,

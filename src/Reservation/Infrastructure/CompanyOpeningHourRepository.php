@@ -26,6 +26,30 @@ class CompanyOpeningHourRepository implements CompanyOpeningHourRepositoryInterf
         $this->entityManager->flush();
     }
 
+    public function existsForDay(
+        Uuid $companyId,
+        int $dayOfWeek,
+        ?Uuid $companyAddressId = null,
+    ): bool {
+        $qb = $this->entityManager->createQueryBuilder()
+            ->select('COUNT(coh.id)')
+            ->from(CompanyOpeningHour::class, 'coh')
+            ->where('IDENTITY(coh.company) = :companyId')
+            ->andWhere('coh.dayOfWeek = :dayOfWeek')
+            ->setParameter('companyId', $companyId)
+            ->setParameter('dayOfWeek', $dayOfWeek)
+        ;
+
+        if (null === $companyAddressId) {
+            $qb->andWhere('coh.companyAddress IS NULL');
+        } else {
+            $qb->andWhere('IDENTITY(coh.companyAddress) = :companyAddressId')
+                ->setParameter('companyAddressId', $companyAddressId);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult() > 0;
+    }
+
     public function findByCompanyAndDateRange(
         Uuid $companyId,
         \DateTimeImmutable $from,
