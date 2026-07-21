@@ -103,7 +103,7 @@ The command bus is customized in `config/packages/messenger.yaml`.
 - Auto-assigns employee when `employeeId` is missing.
 - Returns:
   - reservation `id`
-- Current implementation still also returns `guestCancellationToken` directly from API, even though the longer-term target is to deliver it by mail/SMS instead.
+- Generates `guestCancellationToken` internally and dispatches mailer flow for guest cancellation link delivery instead of exposing the token in API response.
 
 ### Reservation status flow
 
@@ -187,7 +187,7 @@ The command bus is customized in `config/packages/messenger.yaml`.
 
 These are the sharp edges that still appear to be real as of July 21, 2026:
 
-- `CreateGuestReservation` currently returns `guestCancellationToken` directly from API because there is no finished mailer/delivery flow for cancellation links.
+- Guest cancellation link delivery now goes through `Mailer` command flow, but the repo still does not have a real external mail transport/provider wired in yet. The current handler prepares/logs delivery data rather than sending through a configured mail backend.
 - The regression suite lives in `tests/run.php`, not in a standard PHPUnit bootstrap yet.
 - Company write/read coverage is still not complete beyond the new core endpoints. Right now there is no company delete flow, no separate company address management API, and company update currently covers only top-level company fields, not address editing.
 
