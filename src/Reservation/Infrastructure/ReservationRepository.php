@@ -7,6 +7,7 @@ namespace App\Reservation\Infrastructure;
 use App\Reservation\Domain\Entity\Reservation;
 use App\Reservation\Domain\Entity\Reservation\ReservationRepositoryInterface;
 use App\Reservation\Domain\Entity\Reservation\ReservationStatusEnum;
+use App\Reservation\Domain\Entity\Service;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Symfony\Component\Uid\Uuid;
@@ -28,6 +29,70 @@ class ReservationRepository implements ReservationRepositoryInterface
         \assert($reservation instanceof Reservation || null === $reservation);
 
         return $reservation;
+    }
+
+    public function findByFilters(
+        ?Uuid $companyId,
+        ?Uuid $companyAddressId,
+        ?Uuid $employeeId,
+        ?Uuid $customerId,
+        ?\DateTimeImmutable $from,
+        ?\DateTimeImmutable $to,
+        ?string $status,
+        ?array $companyIds = null,
+    ): array {
+        $qb = $this->entityManager->createQueryBuilder()
+            ->select('r')
+            ->from(Reservation::class, 'r')
+            ->join(Service::class, 's', 'WITH', 'r.serviceId = s.id')
+            ->orderBy('r.reservationDate', 'ASC')
+        ;
+
+        if (null !== $companyId) {
+            $qb->andWhere('IDENTITY(s.company) = :companyId')
+                ->setParameter('companyId', $companyId);
+        }
+
+        if (null !== $companyAddressId) {
+            $qb->andWhere('IDENTITY(s.companyAddress) = :companyAddressId')
+                ->setParameter('companyAddressId', $companyAddressId);
+        }
+
+        if (null !== $employeeId) {
+            $qb->andWhere('r.employeeId = :employeeId')
+                ->setParameter('employeeId', $employeeId);
+        }
+
+        if (null !== $customerId) {
+            $qb->andWhere('r.customerId = :customerId')
+                ->setParameter('customerId', $customerId);
+        }
+
+        if (null !== $from) {
+            $qb->andWhere('r.reservationDate >= :from')
+                ->setParameter('from', $from);
+        }
+
+        if (null !== $to) {
+            $qb->andWhere('r.reservationDate <= :to')
+                ->setParameter('to', $to);
+        }
+
+        if (null !== $status) {
+            $qb->andWhere('r.status = :status')
+                ->setParameter('status', $status);
+        }
+
+        if (null !== $companyIds) {
+            if ([] === $companyIds) {
+                return [];
+            }
+
+            $qb->andWhere('IDENTITY(s.company) IN (:companyIds)')
+                ->setParameter('companyIds', $companyIds);
+        }
+
+        return $qb->getQuery()->getResult();
     }
 
     public function findActiveByEmployeesAndDateRange(

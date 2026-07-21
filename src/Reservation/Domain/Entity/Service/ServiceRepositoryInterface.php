@@ -12,4 +12,10 @@ interface ServiceRepositoryInterface
     public function save(Service $service): void;
 
     public function findById(Uuid $id): ?Service;
+
+    /**
+     * @param Uuid[] $ids
+     * @return Service[]
+     */
+    public function findByIds(array $ids): array;
 }

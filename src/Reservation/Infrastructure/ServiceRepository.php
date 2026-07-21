@@ -30,4 +30,9 @@ class ServiceRepository implements ServiceRepositoryInterface
     {
         return $this->repository->find($id);
     }
+
+    public function findByIds(array $ids): array
+    {
+        return $this->repository->findBy(['id' => $ids]);
+    }
 }

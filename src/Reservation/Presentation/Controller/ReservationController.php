@@ -10,11 +10,16 @@ use App\Reservation\Application\CreateReservation\CreateReservationCommand;
 use App\Reservation\Application\CreateReservation\DTO\CreateReservationDTO;
 use App\Reservation\Application\CreateGuestReservation\CreateGuestReservationCommand;
 use App\Reservation\Application\CreateGuestReservation\DTO\CreateGuestReservationDTO;
+use App\Reservation\Application\Query\GetReservationById\GetReservationByIdQuery;
+use App\Reservation\Application\Query\GetReservations\GetReservationsQuery;
+use App\Reservation\Domain\Entity\Reservation\ReservationStatusEnum;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Uid\Uuid;
 
@@ -22,6 +27,7 @@ class ReservationController extends AbstractController
 {
     public function __construct(
         private readonly MessageBusInterface $commandBus,
+        private readonly MessageBusInterface $queryBus,
     ) {
     }
 
@@ -77,5 +83,76 @@ class ReservationController extends AbstractController
         );
 
         return new JsonResponse(status: Response::HTTP_OK);
+    }
+
+    #[Route(path: '/api/reservation/{id}', name: 'app_api_reservation_show', methods: ['GET'])]
+    public function showReservationAction(string $id): JsonResponse
+    {
+        if (!Uuid::isValid($id)) {
+            return new JsonResponse(data: 'Invalid uuid', status: Response::HTTP_BAD_REQUEST);
+        }
+
+        $envelope = $this->queryBus->dispatch(
+            new GetReservationByIdQuery(reservationId: Uuid::fromString($id))
+        );
+
+        return new JsonResponse(
+            data: $envelope->last(HandledStamp::class)->getResult(),
+            status: Response::HTTP_OK,
+        );
+    }
+
+    #[Route(path: '/api/reservations', name: 'app_api_reservation_list', methods: ['GET'])]
+    public function listReservationsAction(Request $request): JsonResponse
+    {
+        $companyId = $request->query->get('companyId');
+        $employeeId = $request->query->get('employeeId');
+        $customerId = $request->query->get('customerId');
+        $status = $request->query->get('status');
+
+        foreach ([
+            'companyId' => $companyId,
+            'employeeId' => $employeeId,
+            'customerId' => $customerId,
+        ] as $field => $value) {
+            if (null !== $value && !Uuid::isValid($value)) {
+                return new JsonResponse(data: sprintf('Invalid %s', $field), status: Response::HTTP_BAD_REQUEST);
+            }
+        }
+
+        if (null !== $status && null === ReservationStatusEnum::tryFrom($status)) {
+            return new JsonResponse(data: 'Invalid status', status: Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $from = null !== $request->query->get('from')
+                ? new \DateTimeImmutable($request->query->get('from'))
+                : null;
+            $to = null !== $request->query->get('to')
+                ? new \DateTimeImmutable($request->query->get('to'))
+                : null;
+        } catch (\Exception) {
+            return new JsonResponse(data: 'Invalid date range', status: Response::HTTP_BAD_REQUEST);
+        }
+
+        if (null !== $from && null !== $to && $from > $to) {
+            return new JsonResponse(data: 'Invalid date range', status: Response::HTTP_BAD_REQUEST);
+        }
+
+        $envelope = $this->queryBus->dispatch(
+            new GetReservationsQuery(
+                companyId: null !== $companyId ? Uuid::fromString($companyId) : null,
+                employeeId: null !== $employeeId ? Uuid::fromString($employeeId) : null,
+                customerId: null !== $customerId ? Uuid::fromString($customerId) : null,
+                from: $from,
+                to: $to,
+                status: $status,
+            )
+        );
+
+        return new JsonResponse(
+            data: $envelope->last(HandledStamp::class)->getResult(),
+            status: Response::HTTP_OK,
+        );
     }
 }
