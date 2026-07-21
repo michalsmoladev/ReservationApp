@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Reservation\Application\CreateGuestReservation;
 
+use App\Mailer\Application\Command\SendGuestCancellationLink\SendGuestCancellationLinkCommand;
 use App\Reservation\Application\Availability\ReservationAvailabilityChecker;
 use App\Reservation\Application\Factory\ReservationFactory;
 use App\Reservation\Domain\Entity\Reservation\ReservationRepositoryInterface;
@@ -11,6 +12,7 @@ use App\Reservation\Domain\Entity\Service\ServiceRepositoryInterface;
 use App\User\Domain\Entity\Employee\EmployeeRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Uid\Uuid;
 
 #[AsMessageHandler]
@@ -22,6 +24,7 @@ class CreateGuestReservationHandler
         private readonly ReservationRepositoryInterface $reservationRepository,
         private readonly ReservationAvailabilityChecker $reservationAvailabilityChecker,
         private readonly ReservationFactory $reservationFactory,
+        private readonly MessageBusInterface $commandBus,
         private readonly LoggerInterface $logger,
     ) {
     }
@@ -71,6 +74,11 @@ class CreateGuestReservationHandler
         );
 
         $this->reservationRepository->save($reservation);
+        $this->commandBus->dispatch(
+            new SendGuestCancellationLinkCommand(
+                reservationId: $reservation->getId()->toString(),
+            )
+        );
 
         $this->logger->info('[CreateGuestReservation] Created guest reservation', ['reservation_id' => $reservation->getId()->toString()]);
     }

@@ -64,7 +64,6 @@ class ReservationController extends AbstractController
         return new JsonResponse(
             data: [
                 'id' => $id->toString(),
-                'guestCancellationToken' => $guestCancellationToken,
             ],
             status: Response::HTTP_OK,
         );
