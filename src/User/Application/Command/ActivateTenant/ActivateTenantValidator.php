@@ -1,12 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\User\Application\Command\ActivateTenant;
 
 use App\Core\Application\MessageBus\Attribute\AsMessageValidator;
 use App\Core\Application\MessageBus\Exception\ValidationFail;
 use App\User\Domain\Entity\Tenant\TenantRepositoryInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageValidator]
 class ActivateTenantValidator
@@ -25,13 +26,21 @@ class ActivateTenantValidator
             $this->logger->info(
                 message: '[ActivateTenant] Tenant not found',
                 context: [
-                    'token' => $command->token->toString()
+                    'token' => $command->token
                 ]
             );
 
-            throw new ValidationFail('[ActivateTenant] Tenant not found', [
-                'token' => $command->token->toString()
-            ]);
+            throw new ValidationFail(
+                sprintf('[ActivateTenant] Tenant not found with token: %s', $command->token)
+            );
+        }
+
+        if ($tenant->getMetadata()->getActivationExpiresAt() < new \DateTimeImmutable()) {
+            throw new ValidationFail('[ActivateTenant] Token has expired');
+        }
+
+        if ($tenant->isActive()) {
+            throw new ValidationFail('[ActivateTenant] Tenant is already active.');
         }
     }
 }

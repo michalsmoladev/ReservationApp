@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\User\Application\Query\GetCustomerById;
 
+use App\User\Application\Exception\CustomerNotFoundException;
 use App\User\Application\Query\DTO\CustomerDTO;
 use App\User\Domain\Entity\Customer\Customer;
 use App\User\Domain\Entity\Customer\CustomerRepositoryInterface;
@@ -25,7 +26,7 @@ class GetCustomerByIdHandler
         $customer = $this->customerRepository->findById($query->customerId);
 
         if (!$customer) {
-
+            throw new CustomerNotFoundException();
         }
 
         return $this->customerService->createCustomerDtoFromCustomer($customer);

@@ -31,6 +31,8 @@ security:
         - { path: ^/api/customer/activate, roles: PUBLIC_ACCESS }
         - { path: ^/api/tenant/create, roles: PUBLIC_ACCESS }
         - { path: ^/api/tenant/activate, roles: PUBLIC_ACCESS }
+        - { path: ^/api/reservation/guest/cancel, roles: PUBLIC_ACCESS }
+        - { path: ^/api/reservation/guest, roles: PUBLIC_ACCESS }
         - { path: ^/api/auth, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 

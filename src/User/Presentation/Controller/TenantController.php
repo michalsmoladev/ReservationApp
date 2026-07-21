@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\User\Presentation\Controller;
 
+use App\User\Application\Command\ActivateTenant\ActivateTenantCommand;
 use App\User\Application\Command\CreateTenant\CreateTenantCommand;
 use App\User\Application\Command\CreateTenant\DTO\CreateTenantDTO;
 use App\User\Application\Command\RemoveTenant\RemoveTenantCommand;
@@ -86,5 +89,19 @@ class TenantController extends AbstractController
         );
 
         return new JsonResponse(status: Response::HTTP_NO_CONTENT);
+    }
+
+    #[Route(path: '/api/tenant/activate/{token}', name: 'app_api_tenant_active', methods: ['GET'])]
+    public function activeTenantAction(string $token): JsonResponse
+    {
+        if ('' === trim($token)) {
+            return new JsonResponse(data: 'Invalid token', status: Response::HTTP_BAD_REQUEST);
+        }
+
+        $this->commandBus->dispatch(
+            new ActivateTenantCommand(token: $token),
+        );
+
+        return new JsonResponse(status: Response::HTTP_OK);
     }
 }
