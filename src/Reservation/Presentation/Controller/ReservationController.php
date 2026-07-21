@@ -8,6 +8,8 @@ use App\Reservation\Application\AcceptReservation\AcceptReservationCommand;
 use App\Reservation\Application\CancelReservation\CancelReservationCommand;
 use App\Reservation\Application\CreateReservation\CreateReservationCommand;
 use App\Reservation\Application\CreateReservation\DTO\CreateReservationDTO;
+use App\Reservation\Application\CreateGuestReservation\CreateGuestReservationCommand;
+use App\Reservation\Application\CreateGuestReservation\DTO\CreateGuestReservationDTO;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -31,6 +33,21 @@ class ReservationController extends AbstractController
         $this->commandBus->dispatch(
             new CreateReservationCommand(
                 createReservationDTO: $createReservationDTO,
+                id: $id,
+            )
+        );
+
+        return new JsonResponse(data: ['id' => $id->toString()], status: Response::HTTP_OK);
+    }
+
+    #[Route(path: '/api/reservation/guest', name: 'app_api_reservation_guest_create', methods: ['POST'])]
+    public function createGuestReservationAction(#[MapRequestPayload] CreateGuestReservationDTO $createGuestReservationDTO): JsonResponse
+    {
+        $id = Uuid::v7();
+
+        $this->commandBus->dispatch(
+            new CreateGuestReservationCommand(
+                createGuestReservationDTO: $createGuestReservationDTO,
                 id: $id,
             )
         );

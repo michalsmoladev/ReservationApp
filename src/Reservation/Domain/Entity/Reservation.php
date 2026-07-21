@@ -32,8 +32,8 @@ class Reservation
         #[ORM\Column(type: 'uuid', length: 36)]
         private Uuid $serviceId,
 
-        #[ORM\Column(type: 'uuid', length: 36)]
-        private Uuid $customerId,
+        #[ORM\Column(type: 'uuid', length: 36, nullable: true)]
+        private ?Uuid $customerId,
 
         #[ORM\Column(type: 'uuid', length: 36, nullable: true)]
         private ?Uuid $employeeId,
@@ -46,11 +46,23 @@ class Reservation
 
         #[ORM\Column(type: 'string', length: 255, nullable: true)]
         private ?string $note = null,
+
+        #[ORM\Column(type: 'string', length: 255, nullable: true)]
+        private ?string $guestFirstname = null,
+
+        #[ORM\Column(type: 'string', length: 255, nullable: true)]
+        private ?string $guestLastname = null,
+
+        #[ORM\Column(type: 'string', length: 255, nullable: true)]
+        private ?string $guestEmail = null,
+
+        #[ORM\Column(type: 'string', length: 255, nullable: true)]
+        private ?string $guestPhone = null,
     ) {
         $this->id = $id;
     }
 
-    public static function create(
+    public static function createForCustomer(
         Uuid $id,
         \DateTimeImmutable $reservationDate,
         Uuid $serviceId,
@@ -73,6 +85,36 @@ class Reservation
         );
     }
 
+    public static function createForGuest(
+        Uuid $id,
+        \DateTimeImmutable $reservationDate,
+        Uuid $serviceId,
+        ?Uuid $employeeId,
+        float $servicePrice,
+        float $serviceDuration,
+        string $guestFirstname,
+        string $guestLastname,
+        string $guestEmail,
+        string $guestPhone,
+        ?string $note = null,
+    ): self {
+        return new self(
+            id: $id,
+            reservationDate: $reservationDate,
+            status: ReservationStatusEnum::WAITING_FOR_APPROVAL->value,
+            serviceId: $serviceId,
+            customerId: null,
+            employeeId: $employeeId,
+            servicePrice: $servicePrice,
+            serviceDuration: $serviceDuration,
+            note: $note,
+            guestFirstname: $guestFirstname,
+            guestLastname: $guestLastname,
+            guestEmail: $guestEmail,
+            guestPhone: $guestPhone,
+        );
+    }
+
     public function getId(): Uuid
     {
         return $this->id;
@@ -83,7 +125,7 @@ class Reservation
         return $this->serviceId;
     }
 
-    public function getCustomerId(): Uuid
+    public function getCustomerId(): ?Uuid
     {
         return $this->customerId;
     }
@@ -96,6 +138,26 @@ class Reservation
     public function getNote(): ?string
     {
         return $this->note;
+    }
+
+    public function getGuestFirstname(): ?string
+    {
+        return $this->guestFirstname;
+    }
+
+    public function getGuestLastname(): ?string
+    {
+        return $this->guestLastname;
+    }
+
+    public function getGuestEmail(): ?string
+    {
+        return $this->guestEmail;
+    }
+
+    public function getGuestPhone(): ?string
+    {
+        return $this->guestPhone;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

@@ -2,13 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Reservation\Application\CreateReservation;
+namespace App\Reservation\Application\CreateGuestReservation;
 
 use App\Reservation\Application\Factory\ReservationFactory;
-use App\Reservation\Domain\Entity\Service;
 use App\Reservation\Domain\Entity\Reservation\ReservationRepositoryInterface;
+use App\Reservation\Domain\Entity\Service;
 use App\Reservation\Domain\Entity\Service\ServiceRepositoryInterface;
-use App\User\Domain\Entity\Customer\CustomerRepositoryInterface;
 use App\User\Domain\Entity\Employee\Employee;
 use App\User\Domain\Entity\Employee\EmployeeRepositoryInterface;
 use Psr\Log\LoggerInterface;
@@ -16,11 +15,10 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Uid\Uuid;
 
 #[AsMessageHandler]
-class CreateReservationHandler
+class CreateGuestReservationHandler
 {
     public function __construct(
         private readonly ServiceRepositoryInterface $serviceRepository,
-        private readonly CustomerRepositoryInterface $customerRepository,
         private readonly EmployeeRepositoryInterface $employeeRepository,
         private readonly ReservationRepositoryInterface $reservationRepository,
         private readonly ReservationFactory $reservationFactory,
@@ -28,39 +26,33 @@ class CreateReservationHandler
     ) {
     }
 
-    public function __invoke(CreateReservationCommand $command): void
+    public function __invoke(CreateGuestReservationCommand $command): void
     {
-        $service = $this->serviceRepository->findById(Uuid::fromString($command->createReservationDTO->serviceId));
-        $customer = $this->customerRepository->findById(Uuid::fromString($command->createReservationDTO->customerId));
+        $service = $this->serviceRepository->findById(Uuid::fromString($command->createGuestReservationDTO->serviceId));
 
         if (!$service) {
-            throw new \RuntimeException('[CreateReservation] Service not found during reservation creation');
+            throw new \RuntimeException('[CreateGuestReservation] Service not found during reservation creation');
         }
 
-        if (!$customer) {
-            throw new \RuntimeException('[CreateReservation] Customer not found during reservation creation');
-        }
-
-        $reservationDate = new \DateTimeImmutable($command->createReservationDTO->reservationDate);
-        $employee = $command->createReservationDTO->employeeId
-            ? $this->employeeRepository->findById(Uuid::fromString($command->createReservationDTO->employeeId))
+        $reservationDate = new \DateTimeImmutable($command->createGuestReservationDTO->reservationDate);
+        $employee = $command->createGuestReservationDTO->employeeId
+            ? $this->employeeRepository->findById(Uuid::fromString($command->createGuestReservationDTO->employeeId))
             : $this->findAvailableEmployee($service, $reservationDate);
 
-        if (!$employee && !$command->createReservationDTO->employeeId) {
-            throw new \RuntimeException('[CreateReservation] No available employee found during automatic assignment');
+        if (!$employee && !$command->createGuestReservationDTO->employeeId) {
+            throw new \RuntimeException('[CreateGuestReservation] No available employee found during automatic assignment');
         }
 
-        $reservation = $this->reservationFactory->createForCustomer(
-            reservationDTO: $command->createReservationDTO,
+        $reservation = $this->reservationFactory->createForGuest(
+            reservationDTO: $command->createGuestReservationDTO,
             id: $command->id,
             service: $service,
-            customer: $customer,
             employee: $employee,
         );
 
         $this->reservationRepository->save($reservation);
 
-        $this->logger->info('[CreateReservation] Created reservation', ['reservation_id' => $reservation->getId()->toString()]);
+        $this->logger->info('[CreateGuestReservation] Created guest reservation', ['reservation_id' => $reservation->getId()->toString()]);
     }
 
     private function findAvailableEmployee(Service $service, \DateTimeImmutable $reservationDate): ?Employee
