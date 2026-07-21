@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace App\Reservation\Application\CreateGuestReservation;
 
+use App\Reservation\Application\Availability\ReservationAvailabilityChecker;
 use App\Core\Application\MessageBus\Attribute\AsMessageValidator;
 use App\Core\Application\MessageBus\Exception\ValidationFail;
-use App\Reservation\Domain\Entity\Reservation\ReservationRepositoryInterface;
-use App\Reservation\Domain\Entity\Service;
 use App\Reservation\Domain\Entity\Service\ServiceRepositoryInterface;
 use App\User\Domain\Entity\Employee\EmployeeRepositoryInterface;
 use Symfony\Component\Uid\Uuid;
@@ -18,7 +17,7 @@ class CreateGuestReservationValidator
     public function __construct(
         private readonly ServiceRepositoryInterface $serviceRepository,
         private readonly EmployeeRepositoryInterface $employeeRepository,
-        private readonly ReservationRepositoryInterface $reservationRepository,
+        private readonly ReservationAvailabilityChecker $reservationAvailabilityChecker,
     ) {
     }
 
@@ -68,7 +67,7 @@ class CreateGuestReservationValidator
         }
 
         if (!$command->createGuestReservationDTO->employeeId) {
-            if (!$this->hasAvailableEmployee($service, $reservationDate)) {
+            if (!$this->reservationAvailabilityChecker->hasAvailableEmployee($service, $reservationDate)) {
                 throw new ValidationFail('[CreateGuestReservation] No available employee for the selected service and date');
             }
 
@@ -85,29 +84,8 @@ class CreateGuestReservationValidator
             throw new ValidationFail('[CreateGuestReservation] Employee is not assigned to the selected service');
         }
 
-        if ($this->reservationRepository->employeeHasReservationConflict(
-            employeeId: $employee->getUuid(),
-            reservationDate: $reservationDate,
-            serviceDuration: $service->getDuration(),
-        )) {
-            throw new ValidationFail('[CreateGuestReservation] Employee already has a conflicting reservation');
+        if (!$this->reservationAvailabilityChecker->isEmployeeAvailableForService($service, $employee, $reservationDate)) {
+            throw new ValidationFail('[CreateGuestReservation] Employee is not available for the selected service and date');
         }
-    }
-
-    private function hasAvailableEmployee(Service $service, \DateTimeImmutable $reservationDate): bool
-    {
-        foreach ($service->getEmployees() as $employee) {
-            if ($this->reservationRepository->employeeHasReservationConflict(
-                employeeId: $employee->getUuid(),
-                reservationDate: $reservationDate,
-                serviceDuration: $service->getDuration(),
-            )) {
-                continue;
-            }
-
-            return true;
-        }
-
-        return false;
     }
 }
