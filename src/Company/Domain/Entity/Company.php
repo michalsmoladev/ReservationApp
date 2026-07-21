@@ -92,6 +92,16 @@ class Company
         return $this->currency;
     }
 
+    public function update(string $displayName, string $legalName, string $taxId, string $currency): self
+    {
+        $this->displayName = $displayName;
+        $this->legalName = $legalName;
+        $this->taxId = $taxId;
+        $this->currency = $currency;
+
+        return $this;
+    }
+
     public function addAddress(CompanyAddress $address): void
     {
         if (!$this->addresses->contains($address)) {
