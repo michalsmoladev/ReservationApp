@@ -51,6 +51,13 @@ class CompanyAddress
         return $this->id;
     }
 
+    public function setId(Uuid $id): self
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
@@ -99,6 +106,26 @@ class CompanyAddress
     public function getName(): ?string
     {
         return $this->name;
+    }
+
+    public function update(
+        string $street,
+        string $city,
+        string $country,
+        string $postalCode,
+        int $apartmentNo,
+        int $buildingNo,
+        ?string $name,
+    ): self {
+        $this->street = $street;
+        $this->city = $city;
+        $this->country = $country;
+        $this->postalCode = $postalCode;
+        $this->apartmentNo = $apartmentNo;
+        $this->buildingNo = $buildingNo;
+        $this->name = $name;
+
+        return $this;
     }
 
     public function setCompany(Company $company): void
