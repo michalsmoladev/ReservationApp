@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Reservation\Application\CreateReservation;
 
 use App\Reservation\Application\Factory\ReservationFactory;
+use App\Reservation\Domain\Entity\Service;
 use App\Reservation\Domain\Entity\Reservation\ReservationRepositoryInterface;
 use App\Reservation\Domain\Entity\Service\ServiceRepositoryInterface;
 use App\User\Domain\Entity\Customer\CustomerRepositoryInterface;
+use App\User\Domain\Entity\Employee\Employee;
 use App\User\Domain\Entity\Employee\EmployeeRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -30,9 +32,6 @@ class CreateReservationHandler
     {
         $service = $this->serviceRepository->findById(Uuid::fromString($command->createReservationDTO->serviceId));
         $customer = $this->customerRepository->findById(Uuid::fromString($command->createReservationDTO->customerId));
-        $employee = $command->createReservationDTO->employeeId
-            ? $this->employeeRepository->findById(Uuid::fromString($command->createReservationDTO->employeeId))
-            : null;
 
         if (!$service) {
             throw new \RuntimeException('[CreateReservation] Service not found during reservation creation');
@@ -40,6 +39,15 @@ class CreateReservationHandler
 
         if (!$customer) {
             throw new \RuntimeException('[CreateReservation] Customer not found during reservation creation');
+        }
+
+        $reservationDate = new \DateTimeImmutable($command->createReservationDTO->reservationDate);
+        $employee = $command->createReservationDTO->employeeId
+            ? $this->employeeRepository->findById(Uuid::fromString($command->createReservationDTO->employeeId))
+            : $this->findAvailableEmployee($service, $reservationDate);
+
+        if (!$employee && !$command->createReservationDTO->employeeId) {
+            throw new \RuntimeException('[CreateReservation] No available employee found during automatic assignment');
         }
 
         $reservation = $this->reservationFactory->create(
@@ -53,5 +61,22 @@ class CreateReservationHandler
         $this->reservationRepository->save($reservation);
 
         $this->logger->info('[CreateReservation] Created reservation', ['reservation_id' => $reservation->getId()->toString()]);
+    }
+
+    private function findAvailableEmployee(Service $service, \DateTimeImmutable $reservationDate): ?Employee
+    {
+        foreach ($service->getEmployees() as $employee) {
+            if ($this->reservationRepository->employeeHasReservationConflict(
+                employeeId: $employee->getUuid(),
+                reservationDate: $reservationDate,
+                serviceDuration: $service->getDuration(),
+            )) {
+                continue;
+            }
+
+            return $employee;
+        }
+
+        return null;
     }
 }
