@@ -30,6 +30,40 @@ class ReservationRepository implements ReservationRepositoryInterface
         return $reservation;
     }
 
+    public function findActiveByEmployeesAndDateRange(
+        array $employeeIds,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+    ): array {
+        if ([] === $employeeIds) {
+            return [];
+        }
+
+        $reservations = $this->entityManager->createQueryBuilder()
+            ->select('r')
+            ->from(Reservation::class, 'r')
+            ->where('r.employeeId IN (:employeeIds)')
+            ->andWhere('r.status != :canceledStatus')
+            ->andWhere('r.reservationDate < :to')
+            ->setParameter('employeeIds', $employeeIds)
+            ->setParameter('canceledStatus', ReservationStatusEnum::CANCELED->value)
+            ->setParameter('to', $to)
+            ->orderBy('r.reservationDate', 'ASC')
+            ->getQuery()
+            ->getResult()
+        ;
+
+        return array_values(array_filter(
+            $reservations,
+            function (Reservation $reservation) use ($from): bool {
+                $reservationEnd = $reservation->getReservationDate()
+                    ->modify(sprintf('+%d seconds', (int) round($reservation->getServiceDuration() * 60)));
+
+                return $reservationEnd > $from;
+            },
+        ));
+    }
+
     public function employeeHasReservationConflict(
         Uuid $employeeId,
         \DateTimeImmutable $reservationDate,

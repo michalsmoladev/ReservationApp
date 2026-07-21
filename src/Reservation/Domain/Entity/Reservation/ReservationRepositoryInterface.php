@@ -11,6 +11,16 @@ interface ReservationRepositoryInterface
 {
     public function findById(Uuid $id): ?Reservation;
 
+    /**
+     * @param Uuid[] $employeeIds
+     * @return Reservation[]
+     */
+    public function findActiveByEmployeesAndDateRange(
+        array $employeeIds,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+    ): array;
+
     public function employeeHasReservationConflict(
         Uuid $employeeId,
         \DateTimeImmutable $reservationDate,

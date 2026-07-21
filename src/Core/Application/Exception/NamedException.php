@@ -18,6 +18,9 @@ abstract class NamedException extends \Exception
     public const string CUSTOMER_NOT_FOUND_MESSAGE = 'customer.customerNotFound';
     public const int CUSTOMER_NOT_FOUND_CODE = 2003;
 
+    public const string SERVICE_NOT_FOUND_MESSAGE = 'service.serviceNotFound';
+    public const int SERVICE_NOT_FOUND_CODE = 2004;
+
     public function getErrorMessage(): string
     {
         return self::API_ERROR_MESSAGE;
