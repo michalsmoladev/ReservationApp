@@ -103,7 +103,7 @@ The command bus is customized in `config/packages/messenger.yaml`.
 - Auto-assigns employee when `employeeId` is missing.
 - Returns:
   - reservation `id`
-  - `guestCancellationToken`
+- Current implementation still also returns `guestCancellationToken` directly from API, even though the longer-term target is to deliver it by mail/SMS instead.
 
 ### Reservation status flow
 
@@ -162,6 +162,10 @@ The command bus is customized in `config/packages/messenger.yaml`.
   - `src/Reservation/Presentation/Controller`
 - Current reservation-related endpoints:
   - `POST /api/service`
+  - `GET /api/service/{id}`
+  - `GET /api/services`
+  - `PATCH /api/service/{id}`
+  - `DELETE /api/service/{id}`
   - `GET /api/service/{id}/availability`
   - `POST /api/reservation`
   - `POST /api/reservation/guest`
@@ -173,18 +177,16 @@ The command bus is customized in `config/packages/messenger.yaml`.
   - `POST /api/company-opening-hour`
   - `POST /api/employee-working-hour`
   - `POST /api/employee-absence`
+- Current company endpoint surface is still limited:
+  - `POST /api/company`
 
 ## Current Sharp Edges
 
 These are the sharp edges that still appear to be real as of July 21, 2026:
 
-- `EmployeeController::activeEmployeeAction()` still uses route path `api/employee/activate/{token}` without a leading `/`.
-- `TenantRepository::findByToken()` still searches plain `token`, while activation data for users is stored in `UserMetadata`. Tenant activation flow likely remains inconsistent with employee/customer activation.
-- `ActivateTenantValidator` still treats tenant activation token as UUID-like (`toString()` usage), unlike the now string-based customer/employee token lookups.
-- `GetCustomerByIdHandler` has an empty `if (!$customer) {}` branch and does not throw a not-found error.
-- `POST /api/reservation/guest` and `POST /api/reservation/guest/cancel/{token}` are excluded from `KernelListener`, but they are still not listed as `PUBLIC_ACCESS` in `config/packages/security.yaml`. In practice, Symfony access control may still block unauthenticated guest flows.
 - `CreateGuestReservation` currently returns `guestCancellationToken` directly from API because there is no finished mailer/delivery flow for cancellation links.
 - The regression suite lives in `tests/run.php`, not in a standard PHPUnit bootstrap yet.
+- Company management API is still incomplete compared with service/reservation flows. Right now `CompanyController` exposes only `POST /api/company`; there is still no practical `GET /api/company/{id}`, `GET /api/companies`, or `PATCH /api/company/{id}` flow.
 
 ## Implementation Guidance
 
