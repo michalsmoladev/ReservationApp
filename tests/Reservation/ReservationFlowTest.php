@@ -662,6 +662,28 @@ final class InMemoryServiceRepository implements ServiceRepositoryInterface
         return null;
     }
 
+    public function findByFilters(?Uuid $companyId, ?Uuid $companyAddressId, bool $onlyActive = true): array
+    {
+        return array_values(array_filter(
+            $this->services,
+            static function (Service $service) use ($companyId, $companyAddressId, $onlyActive): bool {
+                if (null !== $companyId && !$service->getCompany()->getId()->equals($companyId)) {
+                    return false;
+                }
+
+                if (null !== $companyAddressId && !$service->getCompanyAddress()->getId()->equals($companyAddressId)) {
+                    return false;
+                }
+
+                if ($onlyActive && !$service->isActive()) {
+                    return false;
+                }
+
+                return true;
+            },
+        ));
+    }
+
     public function findByIds(array $ids): array
     {
         return array_values(array_filter(

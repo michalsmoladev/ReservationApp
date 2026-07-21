@@ -66,6 +66,10 @@ class CreateGuestReservationValidator
             throw new ValidationFail('[CreateGuestReservation] Service not found');
         }
 
+        if (!$service->isActive()) {
+            throw new ValidationFail('[CreateGuestReservation] Service is not active');
+        }
+
         if (!$command->createGuestReservationDTO->employeeId) {
             if (!$this->reservationAvailabilityChecker->hasAvailableEmployee($service, $reservationDate)) {
                 throw new ValidationFail('[CreateGuestReservation] No available employee for the selected service and date');

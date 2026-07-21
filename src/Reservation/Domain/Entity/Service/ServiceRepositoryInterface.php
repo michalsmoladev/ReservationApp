@@ -14,6 +14,15 @@ interface ServiceRepositoryInterface
     public function findById(Uuid $id): ?Service;
 
     /**
+     * @return Service[]
+     */
+    public function findByFilters(
+        ?Uuid $companyId,
+        ?Uuid $companyAddressId,
+        bool $onlyActive = true,
+    ): array;
+
+    /**
      * @param Uuid[] $ids
      * @return Service[]
      */

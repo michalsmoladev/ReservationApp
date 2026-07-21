@@ -31,6 +31,35 @@ class ServiceRepository implements ServiceRepositoryInterface
         return $this->repository->find($id);
     }
 
+    public function findByFilters(
+        ?Uuid $companyId,
+        ?Uuid $companyAddressId,
+        bool $onlyActive = true,
+    ): array {
+        $qb = $this->entityManager->createQueryBuilder()
+            ->select('s')
+            ->from(Service::class, 's')
+            ->orderBy('s.name', 'ASC')
+        ;
+
+        if (null !== $companyId) {
+            $qb->andWhere('IDENTITY(s.company) = :companyId')
+                ->setParameter('companyId', $companyId);
+        }
+
+        if (null !== $companyAddressId) {
+            $qb->andWhere('IDENTITY(s.companyAddress) = :companyAddressId')
+                ->setParameter('companyAddressId', $companyAddressId);
+        }
+
+        if ($onlyActive) {
+            $qb->andWhere('s.isActive = :isActive')
+                ->setParameter('isActive', true);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
     public function findByIds(array $ids): array
     {
         return $this->repository->findBy(['id' => $ids]);

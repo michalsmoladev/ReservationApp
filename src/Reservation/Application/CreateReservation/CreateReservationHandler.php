@@ -37,6 +37,10 @@ class CreateReservationHandler
             throw new \RuntimeException('[CreateReservation] Service not found during reservation creation');
         }
 
+        if (!$service->isActive()) {
+            throw new \RuntimeException('[CreateReservation] Service is not active during reservation creation');
+        }
+
         if (!$customer) {
             throw new \RuntimeException('[CreateReservation] Customer not found during reservation creation');
         }

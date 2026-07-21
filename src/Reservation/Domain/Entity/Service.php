@@ -55,6 +55,9 @@ class Service
         #[ORM\ManyToOne(targetEntity: CompanyAddress::class)]
         #[ORM\JoinColumn(name: 'company_address_id', referencedColumnName: 'id', nullable: false)]
         private CompanyAddress $companyAddress,
+
+        #[ORM\Column(type: 'boolean')]
+        private bool $isActive = true,
     ) {
         $this->employees = new ArrayCollection();
     }
@@ -107,6 +110,33 @@ class Service
     public function getCompanyAddress(): CompanyAddress
     {
         return $this->companyAddress;
+    }
+
+    public function assignCompanyAddress(CompanyAddress $companyAddress): void
+    {
+        $this->companyAddress = $companyAddress;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    /**
+     * @param Employee[] $employees
+     */
+    public function syncEmployees(array $employees): void
+    {
+        $this->employees->clear();
+
+        foreach ($employees as $employee) {
+            $this->addEmployee($employee);
+        }
+    }
+
+    public function deactivate(): void
+    {
+        $this->isActive = false;
     }
 
     public function addEmployee(Employee $employee): void

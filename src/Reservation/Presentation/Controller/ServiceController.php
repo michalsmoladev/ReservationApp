@@ -6,7 +6,12 @@ namespace App\Reservation\Presentation\Controller;
 
 use App\Reservation\Application\CreateService\CreateServiceCommand;
 use App\Reservation\Application\CreateService\DTO\CreateServiceDTO;
+use App\Reservation\Application\DeactivateService\DeactivateServiceCommand;
+use App\Reservation\Application\Query\GetServiceById\GetServiceByIdQuery;
+use App\Reservation\Application\Query\GetServices\GetServicesQuery;
 use App\Reservation\Application\Query\GetServiceAvailability\GetServiceAvailabilityQuery;
+use App\Reservation\Application\UpdateService\DTO\UpdateServiceDTO;
+use App\Reservation\Application\UpdateService\UpdateServiceCommand;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -38,6 +43,86 @@ class ServiceController extends AbstractController
         );
 
         return new JsonResponse(data: ['id' => $id->toString()], status: Response::HTTP_OK);
+    }
+
+    #[Route(path: '/api/service/{id}', name: 'app_api_service_show', methods: ['GET'])]
+    public function showServiceAction(string $id): JsonResponse
+    {
+        if (!Uuid::isValid($id)) {
+            return new JsonResponse(data: 'Invalid uuid', status: Response::HTTP_BAD_REQUEST);
+        }
+
+        $envelope = $this->queryBus->dispatch(
+            new GetServiceByIdQuery(
+                serviceId: Uuid::fromString($id),
+            )
+        );
+
+        return new JsonResponse(
+            data: $envelope->last(HandledStamp::class)->getResult(),
+            status: Response::HTTP_OK,
+        );
+    }
+
+    #[Route(path: '/api/services', name: 'app_api_service_list', methods: ['GET'])]
+    public function listServicesAction(Request $request): JsonResponse
+    {
+        $companyId = $request->query->get('companyId');
+        $companyAddressId = $request->query->get('companyAddressId');
+
+        foreach ([
+            'companyId' => $companyId,
+            'companyAddressId' => $companyAddressId,
+        ] as $field => $value) {
+            if (null !== $value && !Uuid::isValid($value)) {
+                return new JsonResponse(data: sprintf('Invalid %s', $field), status: Response::HTTP_BAD_REQUEST);
+            }
+        }
+
+        $envelope = $this->queryBus->dispatch(
+            new GetServicesQuery(
+                companyId: null !== $companyId ? Uuid::fromString($companyId) : null,
+                companyAddressId: null !== $companyAddressId ? Uuid::fromString($companyAddressId) : null,
+            )
+        );
+
+        return new JsonResponse(
+            data: $envelope->last(HandledStamp::class)->getResult(),
+            status: Response::HTTP_OK,
+        );
+    }
+
+    #[Route(path: '/api/service/{id}', name: 'app_api_service_update', methods: ['PATCH'])]
+    public function updateServiceAction(string $id, #[MapRequestPayload] UpdateServiceDTO $updateServiceDTO): JsonResponse
+    {
+        if (!Uuid::isValid($id)) {
+            return new JsonResponse(data: 'Invalid uuid', status: Response::HTTP_BAD_REQUEST);
+        }
+
+        $this->commandBus->dispatch(
+            new UpdateServiceCommand(
+                serviceId: Uuid::fromString($id),
+                updateServiceDTO: $updateServiceDTO,
+            )
+        );
+
+        return new JsonResponse(status: Response::HTTP_OK);
+    }
+
+    #[Route(path: '/api/service/{id}', name: 'app_api_service_delete', methods: ['DELETE'])]
+    public function deactivateServiceAction(string $id): JsonResponse
+    {
+        if (!Uuid::isValid($id)) {
+            return new JsonResponse(data: 'Invalid uuid', status: Response::HTTP_BAD_REQUEST);
+        }
+
+        $this->commandBus->dispatch(
+            new DeactivateServiceCommand(
+                serviceId: Uuid::fromString($id),
+            )
+        );
+
+        return new JsonResponse(status: Response::HTTP_NO_CONTENT);
     }
 
     #[Route(path: '/api/service/{id}/availability', name: 'app_api_service_availability', methods: ['GET'])]

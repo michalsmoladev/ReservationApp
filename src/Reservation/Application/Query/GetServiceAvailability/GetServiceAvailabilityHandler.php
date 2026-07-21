@@ -38,6 +38,10 @@ class GetServiceAvailabilityHandler
             throw new ServiceNotFoundException();
         }
 
+        if (!$service->isActive()) {
+            throw new ServiceNotFoundException();
+        }
+
         $employees = $service->getEmployees()->toArray();
         $companyOpeningHours = $this->companyOpeningHourRepository->findByCompanyAndDateRange(
             companyId: $service->getCompany()->getId(),
