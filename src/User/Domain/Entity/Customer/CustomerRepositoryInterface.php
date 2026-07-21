@@ -22,5 +22,5 @@ interface CustomerRepositoryInterface
 
     public function remove(Customer $customer): void;
 
-    public function findByToken(Uuid $token): ?Customer;
+    public function findByToken(string $token): ?Customer;
 }

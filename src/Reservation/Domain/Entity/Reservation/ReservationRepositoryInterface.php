@@ -42,5 +42,7 @@ interface ReservationRepositoryInterface
         float $serviceDuration,
     ): bool;
 
+    public function claimGuestReservationsByEmail(Uuid $customerId, string $email): int;
+
     public function save(Reservation $reservation): void;
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\User\Application\Command\CreateCustomer;
 
+use App\Reservation\Application\ClaimGuestReservations\GuestReservationClaimer;
 use App\User\Application\Factory\CustomerFactor;
 use App\User\Domain\Entity\Customer\CustomerRepositoryInterface;
 use Psr\Log\LoggerInterface;
@@ -15,6 +16,7 @@ class CreateCustomerHandler
     public function __construct(
         private readonly CustomerRepositoryInterface $customerRepository,
         private readonly CustomerFactor $customerFactor,
+        private readonly GuestReservationClaimer $guestReservationClaimer,
         private readonly LoggerInterface $logger,
     ) {
     }
@@ -27,6 +29,7 @@ class CreateCustomerHandler
         );
 
         $this->customerRepository->save($customer);
+        $this->guestReservationClaimer->claimForCustomer($customer);
 
         $this->logger->info('[CreateCustomer] Created customer', ['customer_id' => $customer->getUuid()->toString()]);
     }

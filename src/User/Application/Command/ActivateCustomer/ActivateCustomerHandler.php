@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\User\Application\Command\ActivateCustomer;
 
+use App\Reservation\Application\ClaimGuestReservations\GuestReservationClaimer;
 use App\User\Domain\Entity\Customer\Customer;
 use App\User\Domain\Entity\Customer\CustomerRepositoryInterface;
 use Psr\Log\LoggerInterface;
@@ -14,6 +15,7 @@ class ActivateCustomerHandler
 {
     public function __construct(
         private readonly CustomerRepositoryInterface $customerRepository,
+        private readonly GuestReservationClaimer $guestReservationClaimer,
         private readonly LoggerInterface $logger,
     ) {
     }
@@ -26,9 +28,10 @@ class ActivateCustomerHandler
         $customer->markAsActive();
 
         $this->customerRepository->save($customer);
+        $this->guestReservationClaimer->claimForCustomer($customer);
 
         $this->logger->info(
-            '[ActivateCustomer] Employee was activated',
+            '[ActivateCustomer] Customer was activated',
             [
                 'customer_id' => $customer->getUuid()->toString(),
             ],
