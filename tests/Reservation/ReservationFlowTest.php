@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Reservation;
 
+use App\Mailer\Application\Command\SendGuestCancellationLink\SendGuestCancellationLinkCommand;
 use App\Company\Domain\Entity\Address\CompanyAddress;
 use App\Company\Domain\Entity\Company;
 use App\Core\Application\MessageBus\Exception\ValidationFail;
@@ -35,9 +36,12 @@ use Doctrine\ORM\EntityRepository;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Messenger\Envelope;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Uid\Uuid;
 
 final class ReservationFlowTest
@@ -51,6 +55,8 @@ final class ReservationFlowTest
         $this->testAcceptReservationPermissions();
         $this->testCancelReservationPermissions();
         $this->testGuestReservationStoresGuestDataAndCancellationToken();
+        $this->testGuestReservationDispatchesCancellationLinkCommand();
+        $this->testGuestReservationResponseDoesNotExposeCancellationToken();
     }
 
     private function testReservationSnapshotsServicePriceAndDuration(): void
@@ -305,6 +311,7 @@ final class ReservationFlowTest
             reservationRepository: $reservationRepository,
             reservationAvailabilityChecker: $checker,
             reservationFactory: new ReservationFactory(),
+            commandBus: new CapturingMessageBus(),
             logger: new NullLogger(),
         );
 
@@ -329,6 +336,90 @@ final class ReservationFlowTest
         self::assertSame('guest-cancel-token', $reservationRepository->savedReservation?->getGuestCancellationToken());
         self::assertSame(220.0, $reservationRepository->savedReservation?->getServicePrice());
         self::assertSame(90.0, $reservationRepository->savedReservation?->getServiceDuration());
+    }
+
+    private function testGuestReservationDispatchesCancellationLinkCommand(): void
+    {
+        $service = $this->createService();
+        $employee = $this->createEmployee($service->getCompany(), $service->getCompanyAddress(), 'employee@example.com');
+        $service->addEmployee($employee);
+
+        $serviceRepository = new InMemoryServiceRepository([$service]);
+        $employeeRepository = new InMemoryEmployeeRepository([$employee]);
+        $reservationRepository = new CapturingReservationRepository();
+        $messageBus = new CapturingMessageBus();
+        $checker = new class($employee) extends ReservationAvailabilityChecker {
+            public function __construct(private readonly ?Employee $selectedEmployee)
+            {
+            }
+
+            public function findAvailableEmployee(Service $service, \DateTimeImmutable $reservationDate): ?Employee
+            {
+                return $this->selectedEmployee;
+            }
+
+            public function hasAvailableEmployee(Service $service, \DateTimeImmutable $reservationDate): bool
+            {
+                return null !== $this->selectedEmployee;
+            }
+
+            public function isEmployeeAvailableForService(Service $service, Employee $employee, \DateTimeImmutable $reservationDate): bool
+            {
+                return true;
+            }
+        };
+
+        $handler = new CreateGuestReservationHandler(
+            serviceRepository: $serviceRepository,
+            employeeRepository: $employeeRepository,
+            reservationRepository: $reservationRepository,
+            reservationAvailabilityChecker: $checker,
+            reservationFactory: new ReservationFactory(),
+            commandBus: $messageBus,
+            logger: new NullLogger(),
+        );
+
+        $reservationId = Uuid::v7();
+
+        $handler(new CreateGuestReservationCommand(
+            createGuestReservationDTO: new CreateGuestReservationDTO(
+                serviceId: $service->getId()->toString(),
+                reservationDate: '2030-04-02 14:00:00',
+                firstname: 'Guest',
+                lastname: 'Person',
+                email: 'guest@example.com',
+                phone: '123456789',
+            ),
+            id: $reservationId,
+            guestCancellationToken: 'guest-cancel-token',
+        ));
+
+        self::assertSame(1, \count($messageBus->dispatchedMessages), 'Guest reservation should dispatch one mailer command');
+        self::assertTrue($messageBus->dispatchedMessages[0] instanceof SendGuestCancellationLinkCommand, 'Dispatched message should be guest cancellation mail command');
+        self::assertSame($reservationId->toString(), $messageBus->dispatchedMessages[0]->reservationId);
+    }
+
+    private function testGuestReservationResponseDoesNotExposeCancellationToken(): void
+    {
+        $commandBus = new CapturingMessageBus();
+        $queryBus = new CapturingMessageBus();
+        $controller = new \App\Reservation\Presentation\Controller\ReservationController($commandBus, $queryBus);
+
+        $response = $controller->createGuestReservationAction(
+            new CreateGuestReservationDTO(
+                serviceId: Uuid::v7()->toString(),
+                reservationDate: '2030-05-01 12:00:00',
+                firstname: 'Guest',
+                lastname: 'Person',
+                email: 'guest@example.com',
+                phone: '123456789',
+            )
+        );
+
+        self::assertTrue($response instanceof JsonResponse, 'Controller should return JSON response');
+        $payload = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertArrayHasKey('id', $payload, 'Guest reservation response should return id');
+        self::assertArrayNotHasKey('guestCancellationToken', $payload, 'Guest reservation response must not expose guest cancellation token');
     }
 
     private function createCompany(string $displayName = 'Test Company'): Company
@@ -618,6 +709,20 @@ final class ReservationFlowTest
         }
     }
 
+    private static function assertArrayHasKey(string|int $key, array $array, string $message = 'Array key not found'): void
+    {
+        if (!\array_key_exists($key, $array)) {
+            throw new \RuntimeException(sprintf('%s. Missing key: %s', $message, (string) $key));
+        }
+    }
+
+    private static function assertArrayNotHasKey(string|int $key, array $array, string $message = 'Array key should not exist'): void
+    {
+        if (\array_key_exists($key, $array)) {
+            throw new \RuntimeException(sprintf('%s. Unexpected key: %s', $message, (string) $key));
+        }
+    }
+
     private static function assertThrows(callable $callback, string $exceptionClass, string $message): void
     {
         try {
@@ -864,5 +969,17 @@ final class CapturingReservationRepository implements ReservationRepositoryInter
     {
         $this->savedReservation = $reservation;
         $this->reservations[$reservation->getId()->toString()] = $reservation;
+    }
+}
+
+final class CapturingMessageBus implements MessageBusInterface
+{
+    public array $dispatchedMessages = [];
+
+    public function dispatch(object $message, array $stamps = []): Envelope
+    {
+        $this->dispatchedMessages[] = $message;
+
+        return new Envelope($message, $stamps);
     }
 }
