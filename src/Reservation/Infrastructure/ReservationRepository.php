@@ -31,6 +31,15 @@ class ReservationRepository implements ReservationRepositoryInterface
         return $reservation;
     }
 
+    public function findByGuestCancellationToken(string $guestCancellationToken): ?Reservation
+    {
+        $reservation = $this->repository->findOneBy(['guestCancellationToken' => $guestCancellationToken]);
+
+        \assert($reservation instanceof Reservation || null === $reservation);
+
+        return $reservation;
+    }
+
     public function findByFilters(
         ?Uuid $companyId,
         ?Uuid $companyAddressId,

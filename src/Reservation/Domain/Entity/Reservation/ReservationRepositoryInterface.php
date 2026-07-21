@@ -11,6 +11,8 @@ interface ReservationRepositoryInterface
 {
     public function findById(Uuid $id): ?Reservation;
 
+    public function findByGuestCancellationToken(string $guestCancellationToken): ?Reservation;
+
     /**
      * @param Uuid[]|null $companyIds
      * @return Reservation[]

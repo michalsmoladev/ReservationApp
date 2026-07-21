@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Reservation\Presentation\Controller;
 
 use App\Reservation\Application\AcceptReservation\AcceptReservationCommand;
+use App\Reservation\Application\CancelGuestReservation\CancelGuestReservationCommand;
 use App\Reservation\Application\CancelReservation\CancelReservationCommand;
 use App\Reservation\Application\CreateReservation\CreateReservationCommand;
 use App\Reservation\Application\CreateReservation\DTO\CreateReservationDTO;
@@ -50,15 +51,23 @@ class ReservationController extends AbstractController
     public function createGuestReservationAction(#[MapRequestPayload] CreateGuestReservationDTO $createGuestReservationDTO): JsonResponse
     {
         $id = Uuid::v7();
+        $guestCancellationToken = Uuid::v7()->toString();
 
         $this->commandBus->dispatch(
             new CreateGuestReservationCommand(
                 createGuestReservationDTO: $createGuestReservationDTO,
                 id: $id,
+                guestCancellationToken: $guestCancellationToken,
             )
         );
 
-        return new JsonResponse(data: ['id' => $id->toString()], status: Response::HTTP_OK);
+        return new JsonResponse(
+            data: [
+                'id' => $id->toString(),
+                'guestCancellationToken' => $guestCancellationToken,
+            ],
+            status: Response::HTTP_OK,
+        );
     }
 
     #[Route(path: '/api/reservation/{id}/accept', name: 'app_api_reservation_accept', methods: ['POST'])]
@@ -79,6 +88,22 @@ class ReservationController extends AbstractController
         $this->commandBus->dispatch(
             new CancelReservationCommand(
                 reservationId: Uuid::fromString($id),
+            )
+        );
+
+        return new JsonResponse(status: Response::HTTP_OK);
+    }
+
+    #[Route(path: '/api/reservation/guest/cancel/{token}', name: 'app_api_reservation_guest_cancel', methods: ['POST'])]
+    public function cancelGuestReservationAction(string $token): JsonResponse
+    {
+        if ('' === trim($token)) {
+            return new JsonResponse(data: 'Invalid token', status: Response::HTTP_BAD_REQUEST);
+        }
+
+        $this->commandBus->dispatch(
+            new CancelGuestReservationCommand(
+                guestCancellationToken: $token,
             )
         );
 

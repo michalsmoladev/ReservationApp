@@ -12,6 +12,7 @@ class CreateGuestReservationCommand
     public function __construct(
         public CreateGuestReservationDTO $createGuestReservationDTO,
         public Uuid $id,
+        public string $guestCancellationToken,
     ) {
     }
 }

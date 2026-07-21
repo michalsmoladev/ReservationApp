@@ -38,6 +38,7 @@ class ReservationFactory
         Uuid $id,
         Service $service,
         ?Employee $employee,
+        string $guestCancellationToken,
     ): Reservation {
         return Reservation::createForGuest(
             id: $id,
@@ -50,6 +51,7 @@ class ReservationFactory
             guestLastname: trim($reservationDTO->lastname),
             guestEmail: trim($reservationDTO->email),
             guestPhone: trim($reservationDTO->phone),
+            guestCancellationToken: $guestCancellationToken,
             note: $reservationDTO->note ? trim($reservationDTO->note) : null,
         );
     }
