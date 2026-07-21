@@ -128,6 +128,16 @@ class Reservation
         return $this->serviceDuration;
     }
 
+    public function accept(): void
+    {
+        $this->status = ReservationStatusEnum::CONFIRMED->value;
+    }
+
+    public function cancel(): void
+    {
+        $this->status = ReservationStatusEnum::CANCELED->value;
+    }
+
     #[ORM\PrePersist]
     public function prePersist(): void
     {

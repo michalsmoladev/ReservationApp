@@ -20,6 +20,15 @@ class ReservationRepository implements ReservationRepositoryInterface
         $this->repository = $this->entityManager->getRepository(Reservation::class);
     }
 
+    public function findById(Uuid $id): ?Reservation
+    {
+        $reservation = $this->repository->find($id);
+
+        \assert($reservation instanceof Reservation || null === $reservation);
+
+        return $reservation;
+    }
+
     public function employeeHasReservationConflict(
         Uuid $employeeId,
         \DateTimeImmutable $reservationDate,
