@@ -30,6 +30,10 @@ class GetCompaniesHandler
         $items = [];
 
         foreach ($user->getCompanies() as $company) {
+            if (!$company->isActive()) {
+                continue;
+            }
+
             $items[] = $this->companyService->createDtoFromEntity($company);
         }
 

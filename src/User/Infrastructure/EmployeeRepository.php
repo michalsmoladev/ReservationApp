@@ -65,4 +65,18 @@ class EmployeeRepository implements EmployeeRepositoryInterface
 
         return $qb->getQuery()->getOneOrNullResult();
     }
+
+    public function existsActiveByCompanyId(Uuid $companyId): bool
+    {
+        return (int) $this->entityManager->createQueryBuilder()
+            ->select('COUNT(e.uuid)')
+            ->from(Employee::class, 'e')
+            ->where('IDENTITY(e.company) = :companyId')
+            ->andWhere('e.isActive = :isActive')
+            ->setParameter('companyId', $companyId)
+            ->setParameter('isActive', true)
+            ->getQuery()
+            ->getSingleScalarResult() > 0
+        ;
+    }
 }

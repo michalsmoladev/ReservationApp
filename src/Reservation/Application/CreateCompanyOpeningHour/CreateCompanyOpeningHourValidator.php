@@ -44,7 +44,7 @@ class CreateCompanyOpeningHourValidator
 
         $company = $this->companyRepository->findById(Uuid::fromString($dto->companyId));
 
-        if (!$company) {
+        if (!$company || !$company->isActive()) {
             throw new ValidationFail('[CreateCompanyOpeningHour] Company not found');
         }
 

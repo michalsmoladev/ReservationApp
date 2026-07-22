@@ -26,4 +26,6 @@ interface CompanyOpeningHourRepositoryInterface
         \DateTimeImmutable $to,
         ?Uuid $companyAddressId = null,
     ): array;
+
+    public function existsByCompanyId(Uuid $companyId): bool;
 }

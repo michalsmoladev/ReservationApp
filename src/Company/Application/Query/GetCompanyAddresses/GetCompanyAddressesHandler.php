@@ -28,7 +28,7 @@ class GetCompanyAddressesHandler
     {
         $company = $this->companyRepository->findById($query->companyId);
 
-        if (!$company) {
+        if (!$company || !$company->isActive()) {
             throw new CompanyNotFoundException();
         }
 

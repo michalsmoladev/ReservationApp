@@ -32,6 +32,9 @@ class Company
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $updatedAt = null;
 
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $isActive = true;
+
     public function __construct(
         #[ORM\Column(type: 'string', length: 128)]
         private string $displayName,
@@ -92,12 +95,24 @@ class Company
         return $this->currency;
     }
 
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+
     public function update(string $displayName, string $legalName, string $taxId, string $currency): self
     {
         $this->displayName = $displayName;
         $this->legalName = $legalName;
         $this->taxId = $taxId;
         $this->currency = $currency;
+
+        return $this;
+    }
+
+    public function deactivate(): self
+    {
+        $this->isActive = false;
 
         return $this;
     }

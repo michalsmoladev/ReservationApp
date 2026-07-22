@@ -8,6 +8,7 @@ use App\Company\Application\Command\CreateCompany\CreateCompanyCommand;
 use App\Company\Application\Command\CreateCompany\DTO\CreateCompanyDTO;
 use App\Company\Application\Command\CreateCompanyAddress\CreateCompanyAddressCommand;
 use App\Company\Application\Command\CreateCompanyAddress\DTO\CreateCompanyAddressDTO;
+use App\Company\Application\Command\DeactivateCompany\DeactivateCompanyCommand;
 use App\Company\Application\Command\DeleteCompanyAddress\DeleteCompanyAddressCommand;
 use App\Company\Application\Command\UpdateCompanyAddress\DTO\UpdateCompanyAddressDTO;
 use App\Company\Application\Command\UpdateCompanyAddress\UpdateCompanyAddressCommand;
@@ -92,6 +93,22 @@ class CompanyController extends AbstractController
             new UpdateCompanyCommand(
                 companyId: Uuid::fromString($id),
                 updateCompanyDTO: $updateCompanyDTO,
+            )
+        );
+
+        return new JsonResponse(status: Response::HTTP_OK);
+    }
+
+    #[Route(path: '/api/company/{id}/deactivate', name: 'app_api_company_deactivate', methods: ['POST'])]
+    public function deactivateCompanyAction(string $id): JsonResponse
+    {
+        if (!Uuid::isValid($id)) {
+            return new JsonResponse(data: 'Invalid uuid', status: Response::HTTP_BAD_REQUEST);
+        }
+
+        $this->commandBus->dispatch(
+            new DeactivateCompanyCommand(
+                companyId: Uuid::fromString($id),
             )
         );
 

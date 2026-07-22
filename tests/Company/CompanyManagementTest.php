@@ -8,6 +8,9 @@ use App\Company\Application\Command\CreateCompanyAddress\CreateCompanyAddressCom
 use App\Company\Application\Command\CreateCompanyAddress\CreateCompanyAddressHandler;
 use App\Company\Application\Command\CreateCompanyAddress\CreateCompanyAddressValidator;
 use App\Company\Application\Command\CreateCompanyAddress\DTO\CreateCompanyAddressDTO;
+use App\Company\Application\Command\DeactivateCompany\DeactivateCompanyCommand;
+use App\Company\Application\Command\DeactivateCompany\DeactivateCompanyHandler;
+use App\Company\Application\Command\DeactivateCompany\DeactivateCompanyValidator;
 use App\Company\Application\Command\DeleteCompanyAddress\DeleteCompanyAddressCommand;
 use App\Company\Application\Command\DeleteCompanyAddress\DeleteCompanyAddressHandler;
 use App\Company\Application\Command\DeleteCompanyAddress\DeleteCompanyAddressValidator;
@@ -34,6 +37,13 @@ use App\Company\Domain\Entity\Company;
 use App\Company\Domain\Entity\CompanyRepositoryInterface;
 use App\Company\Domain\Service\CompanyService;
 use App\Core\Application\MessageBus\Exception\ValidationFail;
+use App\Reservation\Domain\Entity\CompanyOpeningHour;
+use App\Reservation\Domain\Entity\CompanyOpeningHour\CompanyOpeningHourRepositoryInterface;
+use App\Reservation\Domain\Entity\Reservation;
+use App\Reservation\Domain\Entity\Reservation\ReservationRepositoryInterface;
+use App\Reservation\Domain\Entity\Service;
+use App\Reservation\Domain\Entity\Service\ServiceRepositoryInterface;
+use App\User\Domain\Entity\Employee\EmployeeRepositoryInterface;
 use App\User\Domain\Entity\Tenant\Tenant;
 use App\User\Domain\Entity\UserMetadata;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -54,6 +64,13 @@ final class CompanyManagementTest
         $this->testTenantCannotViewForeignCompany();
         $this->testTenantCanUpdateOwnedCompany();
         $this->testTenantCannotUpdateForeignCompany();
+        $this->testTenantCanDeactivateOwnedCompanyWithoutBlockingDependencies();
+        $this->testTenantCannotDeactivateForeignCompany();
+        $this->testTenantCannotDeactivateCompanyWithActiveService();
+        $this->testTenantCannotDeactivateCompanyWithActiveEmployee();
+        $this->testTenantCannotDeactivateCompanyWithActiveReservation();
+        $this->testTenantCannotDeactivateCompanyWithOpeningHours();
+        $this->testInactiveCompanyIsHiddenFromReadApis();
         $this->testTenantCanListCompanyAddresses();
         $this->testTenantCanCreateCompanyAddress();
         $this->testTenantCannotCreateCompanyAddressForForeignCompany();
@@ -175,6 +192,162 @@ final class CompanyManagementTest
             )),
             ValidationFail::class,
             'Tenant should not update foreign company',
+        );
+    }
+
+    private function testTenantCanDeactivateOwnedCompanyWithoutBlockingDependencies(): void
+    {
+        $company = $this->createCompany('Owned Company');
+        $tenant = $this->createTenant([$company]);
+        $repository = new InMemoryCompanyRepository([$company]);
+        $command = new DeactivateCompanyCommand($company->getId());
+
+        (new DeactivateCompanyValidator(
+            companyRepository: $repository,
+            serviceRepository: new InMemoryServiceRepository(false),
+            employeeRepository: new InMemoryEmployeeRepository(false),
+            reservationRepository: new InMemoryReservationRepository(false),
+            companyOpeningHourRepository: new InMemoryCompanyOpeningHourRepository(false),
+            security: $this->securityForUser($tenant),
+        ))($command);
+
+        (new DeactivateCompanyHandler(
+            companyRepository: $repository,
+            logger: new NullLogger(),
+        ))($command);
+
+        self::assertTrue($repository->findById($company->getId())?->isActive() === false, 'Company should be inactive after deactivation');
+    }
+
+    private function testTenantCannotDeactivateForeignCompany(): void
+    {
+        $ownedCompany = $this->createCompany('Owned Company');
+        $foreignCompany = $this->createCompany('Foreign Company');
+        $tenant = $this->createTenant([$ownedCompany]);
+
+        self::assertThrows(
+            static fn () => (new DeactivateCompanyValidator(
+                companyRepository: new InMemoryCompanyRepository([$ownedCompany, $foreignCompany]),
+                serviceRepository: new InMemoryServiceRepository(false),
+                employeeRepository: new InMemoryEmployeeRepository(false),
+                reservationRepository: new InMemoryReservationRepository(false),
+                companyOpeningHourRepository: new InMemoryCompanyOpeningHourRepository(false),
+                security: self::securityForStaticUser($tenant),
+            ))(new DeactivateCompanyCommand($foreignCompany->getId())),
+            ValidationFail::class,
+            'Tenant should not deactivate foreign company',
+        );
+    }
+
+    private function testTenantCannotDeactivateCompanyWithActiveService(): void
+    {
+        $company = $this->createCompany('Owned Company');
+        $tenant = $this->createTenant([$company]);
+
+        self::assertThrows(
+            static fn () => (new DeactivateCompanyValidator(
+                companyRepository: new InMemoryCompanyRepository([$company]),
+                serviceRepository: new InMemoryServiceRepository(true),
+                employeeRepository: new InMemoryEmployeeRepository(false),
+                reservationRepository: new InMemoryReservationRepository(false),
+                companyOpeningHourRepository: new InMemoryCompanyOpeningHourRepository(false),
+                security: self::securityForStaticUser($tenant),
+            ))(new DeactivateCompanyCommand($company->getId())),
+            ValidationFail::class,
+            'Active services should block company deactivation',
+        );
+    }
+
+    private function testTenantCannotDeactivateCompanyWithActiveEmployee(): void
+    {
+        $company = $this->createCompany('Owned Company');
+        $tenant = $this->createTenant([$company]);
+
+        self::assertThrows(
+            static fn () => (new DeactivateCompanyValidator(
+                companyRepository: new InMemoryCompanyRepository([$company]),
+                serviceRepository: new InMemoryServiceRepository(false),
+                employeeRepository: new InMemoryEmployeeRepository(true),
+                reservationRepository: new InMemoryReservationRepository(false),
+                companyOpeningHourRepository: new InMemoryCompanyOpeningHourRepository(false),
+                security: self::securityForStaticUser($tenant),
+            ))(new DeactivateCompanyCommand($company->getId())),
+            ValidationFail::class,
+            'Active employees should block company deactivation',
+        );
+    }
+
+    private function testTenantCannotDeactivateCompanyWithActiveReservation(): void
+    {
+        $company = $this->createCompany('Owned Company');
+        $tenant = $this->createTenant([$company]);
+
+        self::assertThrows(
+            static fn () => (new DeactivateCompanyValidator(
+                companyRepository: new InMemoryCompanyRepository([$company]),
+                serviceRepository: new InMemoryServiceRepository(false),
+                employeeRepository: new InMemoryEmployeeRepository(false),
+                reservationRepository: new InMemoryReservationRepository(true),
+                companyOpeningHourRepository: new InMemoryCompanyOpeningHourRepository(false),
+                security: self::securityForStaticUser($tenant),
+            ))(new DeactivateCompanyCommand($company->getId())),
+            ValidationFail::class,
+            'Active reservations should block company deactivation',
+        );
+    }
+
+    private function testTenantCannotDeactivateCompanyWithOpeningHours(): void
+    {
+        $company = $this->createCompany('Owned Company');
+        $tenant = $this->createTenant([$company]);
+
+        self::assertThrows(
+            static fn () => (new DeactivateCompanyValidator(
+                companyRepository: new InMemoryCompanyRepository([$company]),
+                serviceRepository: new InMemoryServiceRepository(false),
+                employeeRepository: new InMemoryEmployeeRepository(false),
+                reservationRepository: new InMemoryReservationRepository(false),
+                companyOpeningHourRepository: new InMemoryCompanyOpeningHourRepository(true),
+                security: self::securityForStaticUser($tenant),
+            ))(new DeactivateCompanyCommand($company->getId())),
+            ValidationFail::class,
+            'Opening hours should block company deactivation',
+        );
+    }
+
+    private function testInactiveCompanyIsHiddenFromReadApis(): void
+    {
+        $company = $this->createCompany('Owned Company');
+        $company->deactivate();
+        $tenant = $this->createTenant([$company]);
+        $repository = new InMemoryCompanyRepository([$company]);
+
+        $listResult = (new GetCompaniesHandler(
+            companyService: new CompanyService(),
+            security: $this->securityForUser($tenant),
+        ))(new GetCompaniesQuery());
+
+        self::assertSame(0, \count($listResult->companies), 'Inactive company should not appear in list');
+
+        self::assertThrows(
+            static fn () => (new GetCompanyByIdHandler(
+                companyRepository: $repository,
+                companyService: new CompanyService(),
+                security: self::securityForStaticUser($tenant),
+            ))(new GetCompanyByIdQuery($company->getId())),
+            CompanyNotFoundException::class,
+            'Inactive company should not be visible in details API',
+        );
+
+        self::assertThrows(
+            static fn () => (new GetCompanyAddressesHandler(
+                companyRepository: $repository,
+                companyAddressRepository: new InMemoryCompanyAddressRepository($company->getAddresses()->toArray()),
+                companyService: new CompanyService(),
+                security: self::securityForStaticUser($tenant),
+            ))(new GetCompanyAddressesQuery($company->getId())),
+            CompanyNotFoundException::class,
+            'Inactive company should not expose addresses API',
         );
     }
 
@@ -668,5 +841,152 @@ final class InMemoryCompanyAddressRepository implements CompanyAddressRepository
     public function isUsed(Uuid $companyAddressId): bool
     {
         return $this->isUsed;
+    }
+}
+
+final class InMemoryServiceRepository implements ServiceRepositoryInterface
+{
+    public function __construct(private readonly bool $hasActiveServices)
+    {
+    }
+
+    public function save(Service $service): void
+    {
+    }
+
+    public function findById(Uuid $id): ?Service
+    {
+        return null;
+    }
+
+    public function findByFilters(?Uuid $companyId, ?Uuid $companyAddressId, bool $onlyActive = true): array
+    {
+        return [];
+    }
+
+    public function findByIds(array $ids): array
+    {
+        return [];
+    }
+
+    public function existsActiveByCompanyId(Uuid $companyId): bool
+    {
+        return $this->hasActiveServices;
+    }
+}
+
+final class InMemoryEmployeeRepository implements EmployeeRepositoryInterface
+{
+    public function __construct(private readonly bool $hasActiveEmployees)
+    {
+    }
+
+    public function findByEmail(string $email): ?\App\User\Domain\Entity\Employee\Employee
+    {
+        return null;
+    }
+
+    public function findById(Uuid $uuid): ?\App\User\Domain\Entity\Employee\Employee
+    {
+        return null;
+    }
+
+    public function findByIds(array $uuids): array
+    {
+        return [];
+    }
+
+    public function save(\App\User\Domain\Entity\Employee\Employee $employee): void
+    {
+    }
+
+    public function lock(Uuid $uuid): void
+    {
+    }
+
+    public function remove(\App\User\Domain\Entity\Employee\Employee $Employee): void
+    {
+    }
+
+    public function findByToken(string $token): ?\App\User\Domain\Entity\Employee\Employee
+    {
+        return null;
+    }
+
+    public function existsActiveByCompanyId(Uuid $companyId): bool
+    {
+        return $this->hasActiveEmployees;
+    }
+}
+
+final class InMemoryReservationRepository implements ReservationRepositoryInterface
+{
+    public function __construct(private readonly bool $hasActiveReservations)
+    {
+    }
+
+    public function findById(Uuid $id): ?Reservation
+    {
+        return null;
+    }
+
+    public function findByGuestCancellationToken(string $guestCancellationToken): ?Reservation
+    {
+        return null;
+    }
+
+    public function findByFilters(?Uuid $companyId, ?Uuid $companyAddressId, ?Uuid $employeeId, ?Uuid $customerId, ?\DateTimeImmutable $from, ?\DateTimeImmutable $to, ?string $status, ?array $companyIds = null): array
+    {
+        return [];
+    }
+
+    public function findActiveByEmployeesAndDateRange(array $employeeIds, \DateTimeImmutable $from, \DateTimeImmutable $to): array
+    {
+        return [];
+    }
+
+    public function employeeHasReservationConflict(Uuid $employeeId, \DateTimeImmutable $reservationDate, float $serviceDuration): bool
+    {
+        return false;
+    }
+
+    public function claimGuestReservationsByEmail(Uuid $customerId, string $email): int
+    {
+        return 0;
+    }
+
+    public function save(Reservation $reservation): void
+    {
+    }
+
+    public function existsActiveByCompanyId(Uuid $companyId): bool
+    {
+        return $this->hasActiveReservations;
+    }
+}
+
+final class InMemoryCompanyOpeningHourRepository implements CompanyOpeningHourRepositoryInterface
+{
+    public function __construct(private readonly bool $hasOpeningHours)
+    {
+    }
+
+    public function save(CompanyOpeningHour $companyOpeningHour): void
+    {
+    }
+
+    public function existsForDay(Uuid $companyId, int $dayOfWeek, ?Uuid $companyAddressId = null): bool
+    {
+        return false;
+    }
+
+    public function findByCompanyAndDateRange(Uuid $companyId, \DateTimeImmutable $from, \DateTimeImmutable $to, ?Uuid $companyAddressId = null): array
+    {
+        return [];
+    }
+
+    public function existsByCompanyId(Uuid $companyId): bool
+    {
+        return $this->hasOpeningHours;
     }
 }

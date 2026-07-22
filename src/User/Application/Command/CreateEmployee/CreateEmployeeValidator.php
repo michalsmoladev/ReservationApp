@@ -43,7 +43,7 @@ readonly class CreateEmployeeValidator
 
         $company = $this->companyRepository->findById(Uuid::fromString($command->employeeDto->companyId));
 
-        if (!$company) {
+        if (!$company || !$company->isActive()) {
             throw new ValidationFail('[CreateEmployee] Company not found');
         }
 

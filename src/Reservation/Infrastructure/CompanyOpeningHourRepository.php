@@ -78,6 +78,18 @@ class CompanyOpeningHourRepository implements CompanyOpeningHourRepositoryInterf
         return $qb->getQuery()->getResult();
     }
 
+    public function existsByCompanyId(Uuid $companyId): bool
+    {
+        return (int) $this->entityManager->createQueryBuilder()
+            ->select('COUNT(coh.id)')
+            ->from(CompanyOpeningHour::class, 'coh')
+            ->where('IDENTITY(coh.company) = :companyId')
+            ->setParameter('companyId', $companyId)
+            ->getQuery()
+            ->getSingleScalarResult() > 0
+        ;
+    }
+
     /**
      * @return int[]
      */

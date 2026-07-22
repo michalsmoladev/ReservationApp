@@ -27,4 +27,6 @@ interface ServiceRepositoryInterface
      * @return Service[]
      */
     public function findByIds(array $ids): array;
+
+    public function existsActiveByCompanyId(Uuid $companyId): bool;
 }

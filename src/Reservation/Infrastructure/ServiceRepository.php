@@ -64,4 +64,18 @@ class ServiceRepository implements ServiceRepositoryInterface
     {
         return $this->repository->findBy(['id' => $ids]);
     }
+
+    public function existsActiveByCompanyId(Uuid $companyId): bool
+    {
+        return (int) $this->entityManager->createQueryBuilder()
+            ->select('COUNT(s.id)')
+            ->from(Service::class, 's')
+            ->where('IDENTITY(s.company) = :companyId')
+            ->andWhere('s.isActive = :isActive')
+            ->setParameter('companyId', $companyId)
+            ->setParameter('isActive', true)
+            ->getQuery()
+            ->getSingleScalarResult() > 0
+        ;
+    }
 }
