@@ -16,4 +16,5 @@ interface EmployeeRepositoryInterface
     public function lock(Uuid $uuid): void;
     public function remove(Employee $Employee): void;
     public function findByToken(string $token): ?Employee;
+    public function existsActiveByCompanyId(Uuid $companyId): bool;
 }

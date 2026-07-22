@@ -796,6 +796,14 @@ final class InMemoryServiceRepository implements ServiceRepositoryInterface
             static fn (Service $service): bool => array_any($ids, static fn (Uuid $id): bool => $service->getId()->equals($id)),
         ));
     }
+
+    public function existsActiveByCompanyId(Uuid $companyId): bool
+    {
+        return array_any(
+            $this->services,
+            static fn (Service $service): bool => $service->getCompany()->getId()->equals($companyId) && $service->isActive(),
+        );
+    }
 }
 
 final class InMemoryCustomerRepository implements CustomerRepositoryInterface
@@ -910,6 +918,14 @@ final class InMemoryEmployeeRepository implements EmployeeRepositoryInterface
     {
         return null;
     }
+
+    public function existsActiveByCompanyId(Uuid $companyId): bool
+    {
+        return array_any(
+            $this->employees,
+            static fn (Employee $employee): bool => $employee->getCompany()?->getId()->equals($companyId) && $employee->isActive(),
+        );
+    }
 }
 
 final class CapturingReservationRepository implements ReservationRepositoryInterface
@@ -969,6 +985,11 @@ final class CapturingReservationRepository implements ReservationRepositoryInter
     {
         $this->savedReservation = $reservation;
         $this->reservations[$reservation->getId()->toString()] = $reservation;
+    }
+
+    public function existsActiveByCompanyId(Uuid $companyId): bool
+    {
+        return false;
     }
 }
 

@@ -23,7 +23,7 @@ class CreateCompanyAddressValidator
     {
         $company = $this->companyRepository->findById($command->companyId);
 
-        if (!$company) {
+        if (!$company || !$company->isActive()) {
             throw new ValidationFail('[CreateCompanyAddress] Company not found');
         }
 

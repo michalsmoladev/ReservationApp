@@ -23,7 +23,7 @@ class UpdateCompanyValidator
     {
         $company = $this->companyRepository->findById($command->companyId);
 
-        if (!$company) {
+        if (!$company || !$company->isActive()) {
             throw new ValidationFail('[UpdateCompany] Company not found');
         }
 

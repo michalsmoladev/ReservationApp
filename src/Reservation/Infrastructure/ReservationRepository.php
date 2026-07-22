@@ -187,6 +187,21 @@ class ReservationRepository implements ReservationRepositoryInterface
         $this->entityManager->flush();
     }
 
+    public function existsActiveByCompanyId(Uuid $companyId): bool
+    {
+        return (int) $this->entityManager->createQueryBuilder()
+            ->select('COUNT(r.id)')
+            ->from(Reservation::class, 'r')
+            ->join(Service::class, 's', 'WITH', 'r.serviceId = s.id')
+            ->where('IDENTITY(s.company) = :companyId')
+            ->andWhere('r.status != :canceledStatus')
+            ->setParameter('companyId', $companyId)
+            ->setParameter('canceledStatus', ReservationStatusEnum::CANCELED->value)
+            ->getQuery()
+            ->getSingleScalarResult() > 0
+        ;
+    }
+
     private function calculateReservationEnd(
         \DateTimeImmutable $reservationDate,
         float $serviceDuration,

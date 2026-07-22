@@ -45,7 +45,7 @@ class CreateServiceValidator
 
         $company = $this->companyRepository->findById(Uuid::fromString($command->createServiceDTO->companyId));
 
-        if (!$company) {
+        if (!$company || !$company->isActive()) {
             throw new ValidationFail('[CreateService] Company not found');
         }
 

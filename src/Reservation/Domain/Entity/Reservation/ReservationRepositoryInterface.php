@@ -47,4 +47,6 @@ interface ReservationRepositoryInterface
     public function claimGuestReservationsByEmail(Uuid $customerId, string $email): int;
 
     public function save(Reservation $reservation): void;
+
+    public function existsActiveByCompanyId(Uuid $companyId): bool;
 }
