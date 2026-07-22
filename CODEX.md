@@ -182,14 +182,18 @@ The command bus is customized in `config/packages/messenger.yaml`.
   - `GET /api/company/{id}`
   - `GET /api/companies`
   - `PATCH /api/company/{id}`
+  - `GET /api/company/{id}/addresses`
+  - `POST /api/company/{id}/address`
+  - `PATCH /api/company/address/{id}`
+  - `DELETE /api/company/address/{id}`
 
 ## Current Sharp Edges
 
-These are the sharp edges that still appear to be real as of July 21, 2026:
+These are the sharp edges that still appear to be real as of July 22, 2026:
 
 - Guest cancellation link delivery now goes through `Mailer` command flow, but the repo still does not have a real external mail transport/provider wired in yet. The current handler prepares/logs delivery data rather than sending through a configured mail backend.
 - The regression suite lives in `tests/run.php`, not in a standard PHPUnit bootstrap yet.
-- Company write/read coverage is still not complete beyond the new core endpoints. Right now there is no company delete flow, no separate company address management API, and company update currently covers only top-level company fields, not address editing.
+- Company write/read coverage is still not complete beyond the new core endpoints. Right now there is no company delete/deactivate flow, and company update still covers only top-level company fields while address editing lives in separate address endpoints.
 
 ## Implementation Guidance
 
