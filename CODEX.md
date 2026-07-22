@@ -182,6 +182,7 @@ The command bus is customized in `config/packages/messenger.yaml`.
   - `GET /api/company/{id}`
   - `GET /api/companies`
   - `PATCH /api/company/{id}`
+  - `POST /api/company/{id}/deactivate`
   - `GET /api/company/{id}/addresses`
   - `POST /api/company/{id}/address`
   - `PATCH /api/company/address/{id}`
@@ -193,7 +194,26 @@ These are the sharp edges that still appear to be real as of July 22, 2026:
 
 - Guest cancellation link delivery now goes through `Mailer` command flow, but the repo still does not have a real external mail transport/provider wired in yet. The current handler prepares/logs delivery data rather than sending through a configured mail backend.
 - The regression suite lives in `tests/run.php`, not in a standard PHPUnit bootstrap yet.
-- Company write/read coverage is still not complete beyond the new core endpoints. Right now there is no company delete/deactivate flow, and company update still covers only top-level company fields while address editing lives in separate address endpoints.
+- Company lifecycle is now soft-deactivate based. There is still no reactivation flow, and deactivation blocks while the company has active service/employee/reservation/opening-hour dependencies.
+
+## Company Lifecycle Notes
+
+- `Company` now has an `isActive` flag and uses soft deactivation.
+- `POST /api/company/{id}/deactivate` is the current lifecycle endpoint for shutting down a company.
+- Deactivation is blocked when the company still has:
+  - active services
+  - active employees
+  - active reservations
+  - company opening hours
+- Inactive companies are hidden from company read APIs:
+  - `GET /api/company/{id}`
+  - `GET /api/companies`
+  - `GET /api/company/{id}/addresses`
+- Validators also reject creating new company-linked data for inactive companies, including:
+  - company addresses
+  - services
+  - employees
+  - company opening hours
 
 ## Implementation Guidance
 
